@@ -1,0 +1,350 @@
+"""
+Banquoite — Chat API
+
+The most critical file — connects the frontend to Person 1's agent pipeline.
+
+Endpoints:
+  GET  /chatrooms                        — list user's chatrooms
+  POST /chatrooms                        — create a new chatroom
+  GET  /chatrooms/{chatroom_id}/messages — retrieve message history
+  POST /chatrooms/{chatroom_id}/message  — run pipeline, stream response via SSE
+"""
+
+import asyncio
+import json
+import logging
+import uuid
+from datetime import date, datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.api.auth import get_current_user
+from backend.db.models import Chatroom, Message, User, UserTeamAccess
+from backend.db.session import get_async_session
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Try to import the real pipeline; fall back to a mock for independent testing
+# ---------------------------------------------------------------------------
+try:
+    from backend.agents.pipeline import pipeline as _real_pipeline
+
+    PIPELINE_AVAILABLE = True
+except Exception as exc:
+    logger.warning("Agent pipeline not available — using mock fallback: %s", exc)
+    PIPELINE_AVAILABLE = False
+    _real_pipeline = None
+
+
+def _mock_pipeline_invoke(state: dict) -> dict:
+    """
+    Mock fallback when the real agent pipeline is unavailable.
+    Returns a canned response so the backend can be tested independently.
+    """
+    return {
+        **state,
+        "final_answer": (
+            f"[Mock Response] I received your question: \"{state['user_query']}\". "
+            "The agent pipeline is not yet connected. Once Person 1's agents are "
+            "integrated, this will return real AI-generated answers with full "
+            "Chain of Thought transparency."
+        ),
+        "chain_of_thought": {
+            "sources": [],
+            "sql_executed": None,
+            "rag_chunks_used": 0,
+            "agent_path": ["mock_fallback"],
+            "query_intent": "MOCK",
+            "confidence": "low",
+            "tables_searched": [],
+            "tables_used": [],
+            "teams_accessed": state.get("allowed_team_ids", []),
+        },
+    }
+
+
+router = APIRouter()
+
+
+# ---------------------------------------------------------------------------
+# Pydantic Schemas
+# ---------------------------------------------------------------------------
+class CreateChatroomRequest(BaseModel):
+    """Request body for creating a new chatroom."""
+
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class ChatroomResponse(BaseModel):
+    """Response shape for a chatroom."""
+
+    id: str
+    name: str | None
+    created_at: str
+    last_message_preview: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MessageResponse(BaseModel):
+    """Response shape for a single message."""
+
+    id: str
+    role: str
+    content: str
+    chain_of_thought: dict | None = None
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SendMessageRequest(BaseModel):
+    """Request body for sending a message to the pipeline."""
+
+    query: str = Field(..., min_length=1, max_length=5000)
+
+
+# ---------------------------------------------------------------------------
+# GET /chatrooms — list user's chatrooms
+# ---------------------------------------------------------------------------
+@router.get("", response_model=list[ChatroomResponse])
+async def list_chatrooms(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Return all chatrooms belonging to the authenticated user."""
+    result = await db.execute(
+        select(Chatroom)
+        .where(Chatroom.user_id == current_user.id)
+        .order_by(Chatroom.created_at.desc())
+    )
+    chatrooms = result.scalars().all()
+
+    response = []
+    for cr in chatrooms:
+        # Fetch latest message preview
+        msg_result = await db.execute(
+            select(Message.content)
+            .where(Message.chatroom_id == cr.id)
+            .order_by(Message.created_at.desc())
+            .limit(1)
+        )
+        last_msg = msg_result.scalar_one_or_none()
+
+        response.append(
+            ChatroomResponse(
+                id=str(cr.id),
+                name=cr.name,
+                created_at=cr.created_at.isoformat(),
+                last_message_preview=(
+                    last_msg[:100] + "..." if last_msg and len(last_msg) > 100 else last_msg
+                ),
+            )
+        )
+
+    return response
+
+
+# ---------------------------------------------------------------------------
+# POST /chatrooms — create a new chatroom
+# ---------------------------------------------------------------------------
+@router.post("", response_model=ChatroomResponse, status_code=status.HTTP_201_CREATED)
+async def create_chatroom(
+    body: CreateChatroomRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Create a new isolated chatroom for the authenticated user."""
+    chatroom = Chatroom(user_id=current_user.id, name=body.name)
+    db.add(chatroom)
+    await db.commit()
+    await db.refresh(chatroom)
+
+    return ChatroomResponse(
+        id=str(chatroom.id),
+        name=chatroom.name,
+        created_at=chatroom.created_at.isoformat(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# GET /chatrooms/{chatroom_id}/messages — retrieve message history
+# ---------------------------------------------------------------------------
+@router.get("/{chatroom_id}/messages", response_model=list[MessageResponse])
+async def get_messages(
+    chatroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Return all messages in a chatroom, ordered by creation time."""
+    # Validate chatroom ownership
+    try:
+        cr_uuid = uuid.UUID(chatroom_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid chatroom ID")
+
+    result = await db.execute(select(Chatroom).where(Chatroom.id == cr_uuid))
+    chatroom = result.scalar_one_or_none()
+
+    if not chatroom or chatroom.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chatroom not found")
+
+    msg_result = await db.execute(
+        select(Message)
+        .where(Message.chatroom_id == cr_uuid)
+        .order_by(Message.created_at.asc())
+    )
+    messages = msg_result.scalars().all()
+
+    return [
+        MessageResponse(
+            id=str(m.id),
+            role=m.role,
+            content=m.content,
+            chain_of_thought=m.chain_of_thought,
+            created_at=m.created_at.isoformat(),
+        )
+        for m in messages
+    ]
+
+
+# ---------------------------------------------------------------------------
+# POST /chatrooms/{chatroom_id}/message — run pipeline, stream via SSE
+# ---------------------------------------------------------------------------
+@router.post("/{chatroom_id}/message")
+async def send_message(
+    chatroom_id: str,
+    body: SendMessageRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Send a user message, invoke the AI pipeline, and stream the response
+    back as Server-Sent Events (SSE).
+
+    SSE event types:
+      - {"type": "chunk", "content": "word "}  — streamed answer fragment
+      - {"type": "done", "chain_of_thought": {...}}  — final CoT payload
+      - {"type": "error", "message": "..."}  — error notification
+    """
+    # Validate chatroom ownership
+    try:
+        cr_uuid = uuid.UUID(chatroom_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid chatroom ID")
+
+    result = await db.execute(select(Chatroom).where(Chatroom.id == cr_uuid))
+    chatroom = result.scalar_one_or_none()
+
+    if not chatroom or chatroom.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chatroom not found")
+
+    user_query = body.query.strip()
+
+    # Save user message to DB
+    user_msg = Message(
+        chatroom_id=cr_uuid,
+        role="USER",
+        content=user_query,
+    )
+    db.add(user_msg)
+    await db.commit()
+
+    # Fetch allowed_team_ids from user_team_access for this user
+    access_result = await db.execute(
+        select(UserTeamAccess.team_id).where(
+            UserTeamAccess.user_id == current_user.id
+        )
+    )
+    allowed_team_ids = [str(row[0]) for row in access_result.fetchall()]
+
+    # Fallback: if no explicit access rows, use the user's own team
+    if not allowed_team_ids and current_user.team_id:
+        allowed_team_ids = [str(current_user.team_id)]
+
+    # Final fallback: if user has no team at all, grant access to ALL teams
+    # so the pipeline can still find tables (important for demo / new users)
+    if not allowed_team_ids:
+        from backend.db.models import Team
+        all_teams_result = await db.execute(select(Team.id))
+        allowed_team_ids = [str(row[0]) for row in all_teams_result.fetchall()]
+        logger.info("User %s has no team — granting access to all %d teams for pipeline", current_user.email, len(allowed_team_ids))
+
+    logger.info("[CHAT DEBUG] user=%s, team_id=%s, allowed_team_ids=%s", current_user.email, current_user.team_id, allowed_team_ids)
+
+    async def generate():
+        try:
+            # Build the pipeline state from the Master Context spec
+            initial_state = {
+                "user_query": user_query,
+                "user_id": str(current_user.id),
+                "user_persona": current_user.persona,
+                "team_id": str(current_user.team_id) if current_user.team_id else "",
+                "allowed_team_ids": allowed_team_ids,
+                "current_date": date.today().isoformat(),
+                "query_intent": "",
+                "routing_decision": {},
+                "relevant_tables": [],
+                "generated_sql": "",
+                "sql_results": [],
+                "rag_chunks": [],
+                "synthesized_context": "",
+                "final_answer": "",
+                "chain_of_thought": {},
+                "sql_tables_used": [],
+                "sql_retry_count": 0,
+                "sql_error": "",
+            }
+
+
+            # Choose real pipeline or mock fallback
+            if PIPELINE_AVAILABLE and _real_pipeline is not None:
+                invoke_fn = _real_pipeline.invoke
+            else:
+                invoke_fn = _mock_pipeline_invoke
+
+            # Run pipeline in thread pool (pipeline.invoke is synchronous)
+            loop = asyncio.get_event_loop()
+            pipeline_result = await loop.run_in_executor(None, invoke_fn, initial_state)
+
+            final_answer = pipeline_result.get("final_answer", "")
+            cot = pipeline_result.get("chain_of_thought", {})
+
+            # Stream answer word-by-word for smooth typing effect
+            words = final_answer.split(" ")
+            for i, word in enumerate(words):
+                chunk = word + (" " if i < len(words) - 1 else "")
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+                await asyncio.sleep(0.02)
+
+            # Send final event with full Chain of Thought
+            yield f"data: {json.dumps({'type': 'done', 'chain_of_thought': cot})}\n\n"
+
+            # Save assistant message to DB
+            assistant_msg = Message(
+                chatroom_id=cr_uuid,
+                role="ASSISTANT",
+                content=final_answer,
+                chain_of_thought=cot,
+            )
+            db.add(assistant_msg)
+            await db.commit()
+
+        except Exception as exc:
+            logger.exception("Pipeline error for chatroom %s", chatroom_id)
+            yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )

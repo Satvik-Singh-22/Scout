@@ -1,0 +1,28 @@
+# Banquoite API — Render.com Deployment Configuration
+# https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: banquoite-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "1440"
+      - key: CHROMA_PERSIST_PATH
+        value: ./chroma_data
+      - key: PYTHON_VERSION
+        value: "3.11.0"
