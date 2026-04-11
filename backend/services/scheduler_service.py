@@ -21,8 +21,11 @@ from backend.db.models import (
     ScheduledQuery,
     ScheduledReport,
     User,
+    UserTeamAccess,
 )
 from backend.db.session import SyncSessionLocal
+from backend.agents.anomaly_reasoner_agent import anomaly_reasoner_agent
+from backend.agents.anomaly_checker_agent import anomaly_checker_agent
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +138,12 @@ async def run_due_scheduled_queries():
                 if not user:
                     continue
 
+                # Fetch user_team_access rows for this user
+                access_result = session.execute(
+                    select(UserTeamAccess.team_id).where(UserTeamAccess.user_id == user.id)
+                )
+                access_team_ids = [str(tid) for tid in access_result.scalars().all()]
+
                 # Try to invoke the pipeline
                 try:
                     from backend.agents.pipeline import pipeline
@@ -144,7 +153,7 @@ async def run_due_scheduled_queries():
                         "user_id": str(user.id),
                         "user_persona": user.persona,
                         "team_id": str(user.team_id) if user.team_id else "",
-                        "allowed_team_ids": [str(user.team_id)] if user.team_id else [],
+                        "allowed_team_ids": access_team_ids,
                         "current_date": now.date().isoformat(),
                         "query_intent": "",
                         "routing_decision": {},
@@ -240,6 +249,43 @@ async def run_due_scheduled_queries():
                             sq.id, alert_exc,
                             exc_info=True
                         )
+
+                # --- INLINE ANOMALY CHECK ---
+                if report_status == "SUCCESS":
+                    sql_results = result_state.get("sql_results", [])
+                    relevant_tables = result_state.get("relevant_tables", [])
+                    
+                    if sql_results and relevant_tables:
+                        logger.info("Triggering inline anomaly check for query %s", sq.id)
+                        
+                        # Step 1: Reasoner — what anomalies COULD exist?
+                        reasoner_output = anomaly_reasoner_agent(
+                            user_query=sq.query_text,
+                            relevant_tables=relevant_tables,
+                            sql_results=sql_results,
+                            team_id=str(user.team_id),
+                            current_date=now.date().isoformat(),
+                        )
+                        
+                        # Step 2: Checker — do they actually exist?
+                        if reasoner_output:
+                            confirmed_alerts = anomaly_checker_agent(
+                                reasoner_output=reasoner_output,
+                                team_id=str(user.team_id),
+                            )
+                            
+                            for alert_data in confirmed_alerts:
+                                alert = Alert(
+                                    team_id=user.team_id,
+                                    title=alert_data["title"],
+                                    description=alert_data["description"],
+                                    severity=alert_data["severity"],
+                                    data_snapshot=alert_data["data_snapshot"],
+                                    is_read=False,
+                                    created_at=datetime.now(timezone.utc)
+                                )
+                                session.add(alert)
+                                logger.info("Inline anomaly ALERT created: %s", alert_data["title"])
 
                 # Update last_run_at
                 sq.last_run_at = now
