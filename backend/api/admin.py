@@ -287,15 +287,17 @@ async def assign_tables(
     from backend.agents.llm import get_llm
     from langchain_core.messages import SystemMessage, HumanMessage
 
+    # Batch-fetch ALL existing MasterConfig rows for this team (avoids N+1 per assignment)
+    existing_result = await db.execute(
+        select(MasterConfig).where(MasterConfig.team_id == team_uuid)
+    )
+    existing_configs_map: dict[str, MasterConfig] = {
+        mc.table_name: mc for mc in existing_result.scalars().all()
+    }
+
     for assignment in body.table_assignments:
-        # Check if this table is already assigned to this team
-        existing = await db.execute(
-            select(MasterConfig).where(
-                MasterConfig.team_id == team_uuid,
-                MasterConfig.table_name == assignment.table_name,
-            )
-        )
-        existing_config = existing.scalar_one_or_none()
+        # Check if this table is already assigned to this team (from cache)
+        existing_config = existing_configs_map.get(assignment.table_name)
 
         # Decide if we need to generate semantic_definition via Groq
         # The frontend provides a default pattern 'Data from X table.'
@@ -481,16 +483,24 @@ async def set_user_access(
     )
 
     # Create new access rows
-    accessible_teams = []
+    # Batch-fetch all requested teams in a single query (avoids N+1 per team_id)
+    valid_team_uuids = []
     for team_id_str in body.team_ids:
         try:
-            team_uuid = uuid.UUID(team_id_str)
+            valid_team_uuids.append(uuid.UUID(team_id_str))
         except ValueError:
             continue
 
-        # Verify team exists
-        team_result = await db.execute(select(Team).where(Team.id == team_uuid))
-        team = team_result.scalar_one_or_none()
+    teams_result = await db.execute(
+        select(Team).where(Team.id.in_(valid_team_uuids))
+    )
+    teams_by_id: dict[uuid.UUID, Team] = {
+        t.id: t for t in teams_result.scalars().all()
+    }
+
+    accessible_teams = []
+    for team_uuid in valid_team_uuids:
+        team = teams_by_id.get(team_uuid)
         if not team:
             continue
 

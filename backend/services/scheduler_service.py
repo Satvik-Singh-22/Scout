@@ -125,24 +125,34 @@ async def run_due_scheduled_queries():
         session.commit()
         logger.info("Claimed %d queries — next_run_at advanced", len(due_queries))
 
-        # ── STEP 2: Execute each claimed query ──
+        # ── STEP 2: Batch-fetch users and access for all due queries (avoids N+1) ──
+        due_user_ids = list({sq.user_id for sq in due_queries if sq.is_active})
+        users_result = session.execute(
+            select(User).where(User.id.in_(due_user_ids))
+        )
+        users_by_id = {u.id: u for u in users_result.scalars().all()}
+
+        access_result = session.execute(
+            select(UserTeamAccess.user_id, UserTeamAccess.team_id)
+            .where(UserTeamAccess.user_id.in_(due_user_ids))
+        )
+        from collections import defaultdict
+        access_by_user: dict[object, list[str]] = defaultdict(list)
+        for row in access_result.all():
+            access_by_user[row.user_id].append(str(row.team_id))
+
+        # ── STEP 3: Execute each claimed query ──
         for sq in due_queries:
             if not sq.is_active:
                 continue
             try:
-                # Fetch the user for this query
-                user_result = session.execute(
-                    select(User).where(User.id == sq.user_id)
-                )
-                user = user_result.scalar_one_or_none()
+                # Look up user from batch cache
+                user = users_by_id.get(sq.user_id)
                 if not user:
                     continue
 
-                # Fetch user_team_access rows for this user
-                access_result = session.execute(
-                    select(UserTeamAccess.team_id).where(UserTeamAccess.user_id == user.id)
-                )
-                access_team_ids = [str(tid) for tid in access_result.scalars().all()]
+                # Look up access from batch cache
+                access_team_ids = access_by_user.get(user.id, [])
 
                 # Try to invoke the pipeline
                 try:

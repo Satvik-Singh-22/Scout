@@ -171,28 +171,27 @@ async def get_team_members(
             detail="You are not assigned to any team",
         )
 
-    # Fetch team name
-    team_result = await db.execute(
-        select(Team).where(Team.id == current_user.team_id)
+    # Single query: fetch team name + all members via LEFT JOIN
+    result = await db.execute(
+        select(User, Team.name.label("team_name"))
+        .join(Team, User.team_id == Team.id)
+        .where(User.team_id == current_user.team_id)
+        .order_by(User.created_at.asc())
     )
-    team = team_result.scalar_one_or_none()
-    if not team:
+    rows = result.all()
+
+    if not rows:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Team not found",
         )
 
-    # Fetch all members in this team
-    members_result = await db.execute(
-        select(User)
-        .where(User.team_id == current_user.team_id)
-        .order_by(User.created_at.asc())
-    )
-    members = members_result.scalars().all()
+    # All rows share the same team_name
+    team_name = rows[0].team_name
 
     return TeamInfoResponse(
-        team_id=str(team.id),
-        team_name=team.name,
+        team_id=str(current_user.team_id),
+        team_name=team_name,
         members=[
             TeamMemberResponse(
                 id=str(m.id),
@@ -202,6 +201,6 @@ async def get_team_members(
                 role=m.role,
                 created_at=m.created_at.isoformat() if m.created_at else "",
             )
-            for m in members
+            for m, _ in rows
         ],
     )
