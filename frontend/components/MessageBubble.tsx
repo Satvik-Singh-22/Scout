@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Message } from '@/lib/api-client'
 import ChainOfThought from './ChainOfThought'
+import ChartRenderer from './ChartRenderer'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Copy, Check, RotateCcw } from 'lucide-react'
@@ -45,11 +46,25 @@ export default function MessageBubble({
             </ReactMarkdown>
           </div>
         )}
+        
+        {/* Render Chart or Table if available */}
+        {!isUser && message.chain_of_thought?.chart_type && (
+          <div className="mt-4 mb-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <ChartRenderer 
+              chartType={message.chain_of_thought.chart_type}
+              sqlResults={message.chain_of_thought.sql_results}
+              height={message.chain_of_thought.chart_type === 'TABLE' ? 'auto' : 180}
+            />
+          </div>
+        )}
 
         {/* Chain of Thought */}
         {!isUser && message.chain_of_thought && (
           <div className="mt-3">
-            <ChainOfThought cot={message.chain_of_thought} />
+            <ChainOfThought 
+              cot={message.chain_of_thought} 
+              persona={persona}
+            />
           </div>
         )}
 
