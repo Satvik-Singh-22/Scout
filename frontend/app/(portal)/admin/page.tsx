@@ -120,6 +120,22 @@ export default function AdminPage() {
   const paginatedTables = filteredTables.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const selectedCount = assignments[selectedTeam]?.size || 0
 
+  // Select All logic — operates on ALL filtered tables (not just current page)
+  const allFilteredSelected = filteredTables.length > 0 && filteredTables.every(t => assignments[selectedTeam]?.has(t.table_name))
+  const someFilteredSelected = filteredTables.some(t => assignments[selectedTeam]?.has(t.table_name))
+
+  const toggleSelectAll = () => {
+    setAssignments(prev => {
+      const teamSet = new Set(prev[selectedTeam] || [])
+      if (allFilteredSelected) {
+        filteredTables.forEach(t => teamSet.delete(t.table_name))
+      } else {
+        filteredTables.forEach(t => teamSet.add(t.table_name))
+      }
+      return { ...prev, [selectedTeam]: teamSet }
+    })
+  }
+
   // Reset page when search or team changes
   useEffect(() => { setPage(1) }, [searchQuery, selectedTeam])
 
@@ -303,6 +319,20 @@ export default function AdminPage() {
                       className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/10 focus:bg-white outline-none transition-all placeholder:text-gray-400 font-medium"
                     />
                   </div>
+                  <button
+                    onClick={toggleSelectAll}
+                    className={`px-4 py-2.5 font-semibold text-sm rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap ${
+                      allFilteredSelected
+                        ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                        : 'bg-[#f0eeff] border-[#635bff]/20 text-[#635bff] hover:bg-[#e8e5ff]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {allFilteredSelected ? 'deselect' : 'select_all'}
+                    </span>
+                    {allFilteredSelected ? 'Deselect All' : 'Select All'}
+                    <span className="text-[10px] opacity-60 font-bold">({filteredTables.length})</span>
+                  </button>
                   <button className="px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 font-semibold text-sm rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">tune</span>
                     Schema
@@ -315,7 +345,25 @@ export default function AdminPage() {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-gray-50/80 sticky top-0 z-10">
                     <tr>
-                      <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 w-12"></th>
+                      <th className="px-5 py-3 border-b border-gray-100 w-12">
+                        <label className="relative flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={allFilteredSelected} onChange={toggleSelectAll} />
+                          <div
+                            className={`w-[18px] h-[18px] border-2 rounded-md transition-all duration-200 flex items-center justify-center ${
+                              allFilteredSelected
+                                ? 'border-[#635bff] bg-[#635bff]'
+                                : someFilteredSelected
+                                  ? 'border-[#635bff] bg-[#635bff]/50'
+                                  : 'border-gray-300 hover:border-[#635bff]/40'
+                            }`}
+                            title={allFilteredSelected ? 'Deselect all tables' : 'Select all tables'}
+                          >
+                            <span className={`material-symbols-outlined text-white text-[13px] transition-opacity ${allFilteredSelected || someFilteredSelected ? 'opacity-100' : 'opacity-0'}`}>
+                              {allFilteredSelected ? 'check' : 'remove'}
+                            </span>
+                          </div>
+                        </label>
+                      </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 w-20">Type</th>
                       <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Table Name</th>
                       <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">Schema/Path</th>

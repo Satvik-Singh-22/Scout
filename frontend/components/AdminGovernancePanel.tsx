@@ -35,7 +35,7 @@ export default function AdminGovernancePanel() {
         setAssignments(map)
         setLoading(false)
       })
-      .catch(() => setLoading(false)) 
+      .catch(() => setLoading(false))
   }, [])
 
   const toggleTable = (tableName: string) => {
@@ -106,19 +106,36 @@ export default function AdminGovernancePanel() {
   const activeTeamData = teams.find(t => t.id === selectedTeam)
   const filteredTables = tables.filter(t => t.table_name.toLowerCase().includes(searchQuery.toLowerCase()))
 
+  const allFilteredSelected = filteredTables.length > 0 && filteredTables.every(t => assignments[selectedTeam]?.has(t.table_name))
+  const someFilteredSelected = filteredTables.some(t => assignments[selectedTeam]?.has(t.table_name))
+
+  const toggleSelectAll = () => {
+    setAssignments(prev => {
+      const teamSet = new Set(prev[selectedTeam] || [])
+      if (allFilteredSelected) {
+        // Deselect all filtered tables
+        filteredTables.forEach(t => teamSet.delete(t.table_name))
+      } else {
+        // Select all filtered tables
+        filteredTables.forEach(t => teamSet.add(t.table_name))
+      }
+      return { ...prev, [selectedTeam]: teamSet }
+    })
+  }
+
   return (
     <div className="max-w-7xl mx-auto h-screen overflow-hidden flex flex-col">
-      
+
       {/* Tab Navigation */}
       <div className="flex gap-4 border-b border-gray-200 shrink-0">
-        <button 
+        <button
           className={`pb-4 px-2 text-sm font-bold transition-all relative ${activeTab === 'tables' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'}`}
           onClick={() => setActiveTab('tables')}
         >
           Table Assignment
           {activeTab === 'tables' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
         </button>
-        <button 
+        <button
           className={`pb-4 px-2 text-sm font-bold transition-all relative ${activeTab === 'users' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'}`}
           onClick={() => setActiveTab('users')}
         >
@@ -140,19 +157,17 @@ export default function AdminGovernancePanel() {
                 <button
                   key={team.id}
                   onClick={() => setSelectedTeam(team.id)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left ${
-                    selectedTeam === team.id 
-                      ? 'border-indigo-600 bg-indigo-50/50 shadow-sm' 
-                      : 'border-transparent hover:bg-gray-50'
-                  }`}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left ${selectedTeam === team.id
+                    ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
+                    : 'border-transparent hover:bg-gray-50'
+                    }`}
                 >
                   <div>
                     <div className={`text-sm font-bold ${selectedTeam === team.id ? 'text-indigo-900' : 'text-gray-900'}`}>
                       {team.name}
                     </div>
-                    <div className={`text-[10px] mt-0.5 font-semibold uppercase tracking-wider ${
-                      selectedTeam === team.id ? 'text-indigo-600' : 'text-gray-500'
-                    }`}>
+                    <div className={`text-[10px] mt-0.5 font-semibold uppercase tracking-wider ${selectedTeam === team.id ? 'text-indigo-600' : 'text-gray-500'
+                      }`}>
                       {team.table_count || 0} Tables Linked
                     </div>
                   </div>
@@ -172,24 +187,37 @@ export default function AdminGovernancePanel() {
                   <h2 className="text-xl font-bold text-gray-900">{activeTeamData?.name || 'Select Team'} Data Configuration</h2>
                   <p className="text-sm text-gray-500 mt-1">Assign data warehouse tables to the {activeTeamData?.name} semantic pool.</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   {message && <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">{message}</span>}
-                  <button 
-                    onClick={saveAssignments} 
-                    disabled={saving} 
+                  <button
+                    onClick={toggleSelectAll}
+                    className={`flex items-center gap-2 px-4 py-2.5 font-bold text-sm rounded-lg border-2 transition-all ${allFilteredSelected
+                      ? 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                      : 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {allFilteredSelected ? 'deselect' : 'select_all'}
+                    </span>
+                    {allFilteredSelected ? 'Deselect All' : 'Select All'}
+                    <span className="ml-1 text-xs opacity-70">({filteredTables.length})</span>
+                  </button>
+                  <button
+                    onClick={saveAssignments}
+                    disabled={saving}
                     className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-[18px]">save</span>
-                    {saving ? 'Syncing...' : 'Save Configuration'}
+                    {saving ? 'Syncing...' : 'Save & Publish'}
                   </button>
                 </div>
               </div>
 
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                <input 
-                  type="text" 
-                  placeholder="Filter tables by name or identifier..." 
+                <input
+                  type="text"
+                  placeholder="Filter tables by name or identifier..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
@@ -204,7 +232,16 @@ export default function AdminGovernancePanel() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50/80 sticky top-0 backdrop-blur-sm shadow-sm z-10">
                     <tr>
-                      <th className="px-6 py-3 w-16 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">State</th>
+                      <th className="px-6 py-3 w-16 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={allFilteredSelected}
+                          ref={(el) => { if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected }}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-600 cursor-pointer"
+                          title={allFilteredSelected ? 'Deselect all visible tables' : 'Select all visible tables'}
+                        />
+                      </th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Table Identifier</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Schema Shape</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Global Tenants</th>
@@ -214,16 +251,16 @@ export default function AdminGovernancePanel() {
                     {filteredTables.map(table => {
                       const isChecked = assignments[selectedTeam]?.has(table.table_name) || false
                       return (
-                        <tr 
-                          key={table.table_name} 
+                        <tr
+                          key={table.table_name}
                           onClick={() => toggleTable(table.table_name)}
                           className={`cursor-pointer transition-colors ${isChecked ? 'bg-indigo-50/30 hover:bg-indigo-50/60' : 'hover:bg-gray-50'}`}
                         >
                           <td className="px-6 py-4 text-center">
-                            <input 
-                              type="checkbox" 
-                              checked={isChecked} 
-                              readOnly 
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              readOnly
                               className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-600 cursor-pointer pointer-events-none"
                             />
                           </td>
@@ -232,9 +269,8 @@ export default function AdminGovernancePanel() {
                           <td className="px-6 py-4">
                             <div className="flex gap-1.5 flex-wrap">
                               {table.team_assignments.filter(a => a.is_active).map(a => (
-                                <span key={a.team_id} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                  a.team_name === activeTeamData?.name ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                                }`}>
+                                <span key={a.team_id} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${a.team_name === activeTeamData?.name ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+                                  }`}>
                                   {a.team_name}
                                 </span>
                               ))}
@@ -260,7 +296,7 @@ export default function AdminGovernancePanel() {
           <div className="max-w-3xl">
             <h2 className="text-xl font-bold text-gray-900 mb-2">Cross-Domain Analytics Privileges</h2>
             <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-              Enterprise Analysts possess the capability to run multi-domain queries via the conversational router. 
+              Enterprise Analysts possess the capability to run multi-domain queries via the conversational router.
               Toggle the workspaces below to actively weave standard semantic layers into their local vector context.
             </p>
 
@@ -271,35 +307,33 @@ export default function AdminGovernancePanel() {
                     <div>
                       <div className="font-bold text-gray-900 text-lg flex items-center gap-2">
                         {user.name}
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          user.role === 'ENTERPRISE_ANALYST' ? 'bg-indigo-100 text-indigo-700' : 'bg-white border border-gray-300 text-gray-600'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'ENTERPRISE_ANALYST' ? 'bg-indigo-100 text-indigo-700' : 'bg-white border border-gray-300 text-gray-600'
+                          }`}>
                           {user.role.replace('_', ' ')}
                         </span>
                       </div>
                       <div className="text-sm text-gray-500 font-mono mt-1">{user.email}</div>
                     </div>
                   </div>
-                  
+
                   <div className="border-t border-gray-200 pt-4 flex flex-wrap gap-2">
                     {teams.map(team => {
                       const hasAccess = user.accessible_teams.some(a => a.team_id === team.id)
                       const onClick = () => {
-                        const newIds = hasAccess 
+                        const newIds = hasAccess
                           ? user.accessible_teams.map(a => a.team_id).filter(id => id !== team.id)
                           : [...user.accessible_teams.map(a => a.team_id), team.id]
                         updateUserAccess(user.id, newIds)
                       }
-                      
+
                       return (
                         <button
                           key={team.id}
                           onClick={onClick}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${
-                            hasAccess 
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm hover:bg-indigo-700' 
-                              : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600'
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${hasAccess
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm hover:bg-indigo-700'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600'
+                            }`}
                         >
                           <span className="material-symbols-outlined text-[14px]">
                             {hasAccess ? 'check_circle' : 'add_circle'}
@@ -311,7 +345,7 @@ export default function AdminGovernancePanel() {
                   </div>
                 </div>
               ))}
-              
+
               {users.filter(u => u.role === 'ENTERPRISE_ANALYST' || u.role === 'ANALYST').length === 0 && (
                 <div className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-200 rounded-xl">
                   No eligible analysts found in the registry.
