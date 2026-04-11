@@ -35,6 +35,11 @@ Rules:
 - Use LIMIT 500 on queries that could return large result sets.
 - Use proper PostgreSQL date functions: DATE_TRUNC, INTERVAL, EXTRACT.
 
+Prior conversation context:
+{previous_context_block}
+If the current question is a follow-up (e.g. "filter those by region", "now show last month", 
+"same but for FAILED only"), extend or modify the prior SQL rather than starting from scratch.
+
 Database schema:
 {schema}
 """),
@@ -73,12 +78,28 @@ def sql_gen_agent(state: PipelineState) -> dict:
     llm = get_llm(temperature=0, json_mode=True)
     parser = JsonOutputParser(pydantic_object=SQLGenOutput)
     chain = SQL_GEN_PROMPT | llm | parser
-    
+
+    # Build previous context block — helps the LLM refine rather than regenerate
+    previous_sql = state.get("previous_sql", "")
+    previous_query = state.get("previous_query", "")
+    previous_tables = state.get("previous_tables_used", [])
+
+    if previous_query:
+        parts = [f"Previous question: {previous_query}"]
+        if previous_sql:
+            parts.append(f"Previous SQL executed:\n{previous_sql}")
+        if previous_tables:
+            parts.append(f"Tables used previously: {', '.join(previous_tables)}")
+        previous_context_block = "\n".join(parts)
+    else:
+        previous_context_block = "No prior conversation."
+
     try:
         result = chain.invoke({
             "current_date": state["current_date"],
             "schema": schema_str,
-            "user_query": state["user_query"]
+            "user_query": state["user_query"],
+            "previous_context_block": previous_context_block,
         })
         
         sql = result.get("sql", "")
@@ -105,7 +126,11 @@ SQL_RETRY_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a SQL expert for a PostgreSQL banking database.
 A previously generated SQL query failed with an error. Fix it.
 Today's date is {current_date}.
-
+Date resolution examples (today = {current_date}):
+- "this week" → WHERE created_at >= DATE_TRUNC('week', CURRENT_DATE)
+- "last month" → WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND created_at < DATE_TRUNC('month', CURRENT_DATE)
+- "yesterday" → WHERE created_at::date = CURRENT_DATE - INTERVAL '1 day'
+- "this quarter" → WHERE created_at >= DATE_TRUNC('quarter', CURRENT_DATE)
 Rules:
 - Return ONLY a JSON object. No explanation outside the JSON.
 - Format: {{"sql": "SELECT ...", "tables_used": ["table1", "table2"]}}

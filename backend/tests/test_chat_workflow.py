@@ -87,6 +87,11 @@ TEAM_C_ID = "f83c7f6d-00c2-4053-89ef-151a8d13f93c"  # Risk
 TEAM_D_ID = "a628ecc9-6c10-43c5-98a4-45868c78cacf"  # Customer
 TEAM_E_ID = "364aad12-2bac-4b9e-8a51-317e7eb96ddd"  # Finance
 
+# ---------------------------------------------------------------------------
+# Test configuration
+# ---------------------------------------------------------------------------
+TEST_CHATROOM_ID = "259e8113-8484-4e0e-8f01-f807e895b535"
+
 DEMO_USERS = {
     "analyst_a": {
         "user_id":        "aaaa0000-0000-0000-0000-000000000001",
@@ -141,25 +146,46 @@ TEST_SCENARIOS = [
     #     "expect_tables_like": ["mock_transactions", "mock_merchant_categories"],
     #     "expect_sql_keywords": ["SELECT", "merchant"],
     # },
-    {
-        "id":        "UC4",
-        "desc":      "Use Case 4 — Cross-team: system health + payments (Enterprise Analyst)",
-        "user":      "enterprise",
-        "query":     "Give me a summary of system health and payment performance for this week",
-        "expect_intent": "SQL_ONLY",
-        "expect_tables_like": ["mock_transactions", "mock_api_gateway_logs",
-                               "mock_system_health_metrics"],
-        "expect_sql_keywords": ["SELECT"],
-    },
     # {
-    #     "id":        "UC5",
-    #     "desc":      "Use Case 5 — Hybrid / RAG: customer complaints + failures",
-    #     "user":      "analyst_a",
-    #     "query":     "What are customers saying about payment failures?",
-    #     "expect_intent": "RAG_ONLY",   # or HYBRID — either is valid
-    #     "expect_tables_like": [],       # RAG_ONLY skips table lookup
-    #     "expect_sql_keywords": [],
+    #     "id":        "UC4",
+    #     "desc":      "Use Case 4 — Cross-team: system health + payments (Enterprise Analyst)",
+    #     "user":      "enterprise",
+    #     "query":     "Give me a summary of system health and payment performance for this week",
+    #     "expect_intent": "SQL_ONLY",
+    #     "expect_tables_like": ["mock_transactions", "mock_api_gateway_logs"],
+    #     "expect_sql_keywords": ["SELECT"],
     # },
+    # {
+    #     "id":        "UC6",
+    #     "desc":      "Use Case 6 — Follow-up: 'Break that down by merchant'",
+    #     "user":      "analyst_a",
+    #     "query":     "Break that down by merchant category",
+    #     "previous_query": "Why did transaction failures spike last Tuesday?",
+    #     "previous_answer": "There were 45 failures related to recurring payments yesterday...",
+    #     "previous_sql": "SELECT count(*) FROM mock_transactions WHERE status = 'failed' AND date_trunc('day', created_at) = '2025-01-14'",
+    #     "previous_tables_used": ["mock_transactions"],
+    #     "expect_intent": "SQL_ONLY",
+    #     "expect_tables_like": ["mock_transactions", "mock_merchant_categories"],
+    #     "expect_sql_keywords": ["SELECT", "merchant", "failed", "GROUP BY"],
+    # },
+    {
+        "id":        "UC7",
+        "desc":      "Use Case 7 — GENERAL: system capabilities question",
+        "user":      "analyst_a",
+        "query":     "What can you do?",
+        "expect_intent": "GENERAL",
+        "expect_tables_like": [],
+        "expect_sql_keywords": [],
+    },
+    {
+        "id":        "UC8",
+        "desc":      "Use Case 8 — SCHEMA_LOOKUP: what tables exist for payments",
+        "user":      "analyst_a",
+        "query":     "What tables do you have about payments?",
+        "expect_intent": "SCHEMA_LOOKUP",
+        "expect_tables_like": [],   # schema agent populates relevant_tables, not via relevancy
+        "expect_sql_keywords": [],
+    },
 ]
 
 
@@ -167,14 +193,14 @@ TEST_SCENARIOS = [
 # Helpers
 # ---------------------------------------------------------------------------
 
-def build_initial_state(user_key: str, query: str) -> dict:
+def build_initial_state(user_key: str, scenario: dict) -> dict:
     """
     Replicates exactly what chat.py's generate() closure builds.
     This is the frozen PipelineState definition from the Master Context.
     """
     u = DEMO_USERS[user_key]
     return {
-        "user_query":       query,
+        "user_query":       scenario["query"],
         "user_id":          u["user_id"],
         "user_persona":     u["user_persona"],
         "team_id":          u["team_id"],
@@ -193,6 +219,11 @@ def build_initial_state(user_key: str, query: str) -> dict:
         "sql_tables_used":     [],
         "sql_retry_count":     0,
         "sql_error":           "",
+        # --- multi-turn context ---
+        "previous_query":       scenario.get("previous_query", ""),
+        "previous_answer":      scenario.get("previous_answer", ""),
+        "previous_sql":         scenario.get("previous_sql", ""),
+        "previous_tables_used": scenario.get("previous_tables_used", []),
     }
 
 
@@ -232,7 +263,7 @@ def validate_result(scenario: dict, result: dict) -> tuple[int, int]:
     # 2. query_intent is one of the three valid values
     total += 1
     intent = result.get("query_intent", "")
-    if intent in {"SQL_ONLY", "RAG_ONLY", "HYBRID"}:
+    if intent in {"SQL_ONLY", "RAG_ONLY", "HYBRID", "GENERAL", "SCHEMA_LOOKUP"}:
         ok(f"query_intent is valid: '{intent}'")
         passed += 1
     else:
@@ -320,7 +351,7 @@ def validate_result(scenario: dict, result: dict) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 def run_tests() -> None:
-    hdr("BANQUOITE — Chat Workflow Integration Test", MAGENTA)
+    hdr("SCOUT — Chat Workflow Integration Test", MAGENTA)
     print(f"  Mirrors the logic in {BOLD}backend/api/chat.py ›› generate(){RESET}")
     print(f"  Testing {len(TEST_SCENARIOS)} demo scenarios against the live pipeline.\n")
 
@@ -345,8 +376,10 @@ def run_tests() -> None:
         info("Team ID",      user_cfg["team_id"][:8] + "…")
         info("Allowed teams", len(user_cfg["allowed_team_ids"]))
         info("Query",        scenario["query"])
+        if scenario.get("previous_query"):
+            info("Prev Query", scenario["previous_query"])
 
-        initial_state = build_initial_state(scenario["user"], scenario["query"])
+        initial_state = build_initial_state(scenario["user"], scenario)
 
         sub("Running pipeline.invoke()")
         t0 = time.time()

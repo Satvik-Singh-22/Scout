@@ -218,6 +218,7 @@ export async function getMessages(chatroomId: string): Promise<Message[]> {
 export function streamMessage(
   chatroomId: string,
   query: string,
+  persona: 'MANAGER' | 'DEVELOPER',
   onChunk: (text: string) => void,
   onDone: (cot: ChainOfThought) => void,
   onError: (err: string) => void
@@ -227,7 +228,7 @@ export function streamMessage(
   fetch(`${BASE_URL}/chatrooms/${chatroomId}/message`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, persona }),
     signal: controller.signal
   }).then(async (res) => {
     if (res.status === 401) {
