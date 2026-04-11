@@ -225,6 +225,44 @@ async def create_chatroom(
 
 
 # ---------------------------------------------------------------------------
+# PATCH /chatrooms/{chatroom_id} — rename a chatroom
+# ---------------------------------------------------------------------------
+class RenameChatroomRequest(BaseModel):
+    """Request body for renaming a chatroom."""
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+@router.patch("/{chatroom_id}", response_model=ChatroomResponse)
+async def rename_chatroom(
+    chatroom_id: str,
+    body: RenameChatroomRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Rename an existing chatroom owned by the authenticated user."""
+    try:
+        cr_uuid = uuid.UUID(chatroom_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid chatroom ID")
+
+    result = await db.execute(select(Chatroom).where(Chatroom.id == cr_uuid))
+    chatroom = result.scalar_one_or_none()
+
+    if not chatroom or chatroom.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chatroom not found")
+
+    chatroom.name = body.name
+    await db.commit()
+    await db.refresh(chatroom)
+
+    return ChatroomResponse(
+        id=str(chatroom.id),
+        name=chatroom.name,
+        created_at=chatroom.created_at.isoformat(),
+    )
+
+
+# ---------------------------------------------------------------------------
 # GET /chatrooms/{chatroom_id}/messages — retrieve message history
 # ---------------------------------------------------------------------------
 @router.get("/{chatroom_id}/messages", response_model=list[MessageResponse])

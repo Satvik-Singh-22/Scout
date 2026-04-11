@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (user.role === 'PLATFORM_ADMIN') {
         router.push('/admin')
       } else {
-        router.push('/chat')
+        router.push('/dashboard')
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

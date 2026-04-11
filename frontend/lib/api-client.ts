@@ -242,6 +242,16 @@ export async function createChatroom(name: string): Promise<Chatroom> {
   return res.json();
 }
 
+export async function renameChatroom(chatroomId: string, name: string): Promise<Chatroom> {
+  const res = await apiFetch(`${BASE_URL}/chatrooms/${chatroomId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error('Failed to rename chatroom');
+  return res.json();
+}
+
 export async function getMessages(chatroomId: string): Promise<Message[]> {
   const res = await apiFetch(`${BASE_URL}/chatrooms/${chatroomId}/messages`, {
     headers: authHeaders(),
@@ -393,6 +403,14 @@ export async function getScheduledHistory(id: string) {
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data) ? data : [];
+}
+
+export async function deleteScheduled(id: string): Promise<void> {
+  const res = await apiFetch(`${BASE_URL}/scheduled/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to delete scheduled query');
 }
 
 // ─────────────────────────────────────────────

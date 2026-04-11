@@ -143,16 +143,16 @@ export default function Chatroom({
   const personas = [
     {
       key: 'DEVELOPER' as const,
-      label: 'Developer',
-      desc: 'SQL, tables & technical details',
+      label: 'Technical',
+      desc: 'SQL, tables & raw details',
       icon: <DevIcon />,
       activeColor: 'text-emerald-600',
       activeBg: 'bg-white border border-gray-200',
     },
     {
       key: 'MANAGER' as const,
-      label: 'Manager',
-      desc: 'Plain English summaries',
+      label: 'Executive',
+      desc: 'Concise insights & action items',
       icon: <MgrIcon />,
       activeColor: 'text-violet-600',
       activeBg: 'bg-white border border-gray-200',
