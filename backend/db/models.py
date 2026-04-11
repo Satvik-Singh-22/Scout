@@ -274,6 +274,8 @@ class ScheduledQuery(Base):
     cron_expression = Column(String(100), nullable=False)
     delivery = Column(String(20), nullable=False)
     delivery_email = Column(String(255), nullable=True)
+    alert_condition = Column(Text, nullable=True)
+    alert_severity = Column(String(20), nullable=True, default="MEDIUM")
     is_active = Column(Boolean, default=True)
     last_run_at = Column(DateTime(timezone=True), nullable=True)
     next_run_at = Column(DateTime(timezone=True), nullable=True)

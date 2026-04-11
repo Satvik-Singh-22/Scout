@@ -16,6 +16,7 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 
 from backend.db.models import (
+    Alert,
     DashboardCard,
     ScheduledQuery,
     ScheduledReport,
@@ -72,12 +73,14 @@ async def run_due_scheduled_queries():
     Check for scheduled queries whose next_run_at <= now and execute them.
 
     For each due query:
-      1. Build PipelineState with query_text as user_query
-      2. Run pipeline.invoke() synchronously
-      3. Save result to scheduled_reports table
-      4. If delivery == 'DASHBOARD': create dashboard_card record
-      5. If delivery == 'EMAIL': call notification_service.send_report_email()
-      6. Update last_run_at and next_run_at on the scheduled_query
+      1. CLAIM the query by advancing next_run_at immediately (prevents duplicates)
+      2. Build PipelineState with query_text as user_query
+      3. Run pipeline.invoke() synchronously
+      4. Save result to scheduled_reports table
+      5. If delivery == 'DASHBOARD': create dashboard_card record
+      6. If delivery == 'EMAIL': call notification_service.send_report_email()
+      7. Evaluate alert condition via LLM if configured
+      8. Update last_run_at
     """
     if SyncSessionLocal is None:
         return
@@ -100,7 +103,29 @@ async def run_due_scheduled_queries():
 
         logger.info("Found %d due scheduled queries", len(due_queries))
 
+        # ── STEP 1: CLAIM all due queries by advancing next_run_at ──
+        # This prevents the next scheduler tick from picking them up again
         for sq in due_queries:
+            try:
+                parts = sq.cron_expression.strip().split()
+                trigger = CronTrigger(
+                    minute=parts[0],
+                    hour=parts[1],
+                    day=parts[2],
+                    month=parts[3],
+                    day_of_week=parts[4],
+                )
+                sq.next_run_at = trigger.get_next_fire_time(None, now)
+            except Exception:
+                sq.next_run_at = None
+                sq.is_active = False
+        session.commit()
+        logger.info("Claimed %d queries — next_run_at advanced", len(due_queries))
+
+        # ── STEP 2: Execute each claimed query ──
+        for sq in due_queries:
+            if not sq.is_active:
+                continue
             try:
                 # Fetch the user for this query
                 user_result = session.execute(
@@ -171,32 +196,62 @@ async def run_due_scheduled_queries():
                         except Exception as email_exc:
                             logger.error("Email delivery failed for query %s: %s", sq.id, email_exc)
 
-                # Update run timestamps
-                sq.last_run_at = now
-
-                # Compute next run
-                try:
-                    parts = sq.cron_expression.strip().split()
-                    trigger = CronTrigger(
-                        minute=parts[0],
-                        hour=parts[1],
-                        day=parts[2],
-                        month=parts[3],
-                        day_of_week=parts[4],
+                # Evaluate alert condition if configured
+                if report_status == "SUCCESS" and sq.alert_condition:
+                    logger.info(
+                        "Evaluating alert condition for query %s: '%s'",
+                        sq.id, sq.alert_condition[:80]
                     )
-                    sq.next_run_at = trigger.get_next_fire_time(None, now)
-                except Exception:
-                    sq.is_active = False  # Disable if cron is invalid
+                    try:
+                        triggered, reason = _evaluate_alert_condition(
+                            answer, sq.alert_condition
+                        )
+                        logger.info(
+                            "Alert evaluation result for %s: triggered=%s, reason=%s",
+                            sq.id, triggered, reason[:100]
+                        )
+                        if triggered:
+                            alert_severity = sq.alert_severity or "MEDIUM"
+                            alert = Alert(
+                                team_id=user.team_id,
+                                title=f"Scheduled alert: {sq.query_text[:80]}",
+                                description=reason,
+                                severity=alert_severity,
+                                data_snapshot={
+                                    "query_text": sq.query_text,
+                                    "alert_condition": sq.alert_condition,
+                                    "answer_excerpt": answer[:500],
+                                    "detected_at": now.isoformat(),
+                                },
+                            )
+                            session.add(alert)
+                            logger.info(
+                                "Alert CREATED for scheduled query %s (severity=%s)",
+                                sq.id, alert_severity
+                            )
+                        else:
+                            logger.info(
+                                "Alert NOT triggered for query %s: %s",
+                                sq.id, reason[:100]
+                            )
+                    except Exception as alert_exc:
+                        logger.error(
+                            "Alert evaluation failed for query %s: %s",
+                            sq.id, alert_exc,
+                            exc_info=True
+                        )
 
+                # Update last_run_at
+                sq.last_run_at = now
                 session.commit()
                 logger.info("Executed scheduled query %s — status: %s", sq.id, report_status)
 
             except Exception as exc:
-                logger.error("Error processing scheduled query %s: %s", sq.id, exc)
+                logger.error("Error processing scheduled query %s: %s", sq.id, exc, exc_info=True)
                 session.rollback()
 
     except Exception as exc:
-        logger.error("Scheduled queries runner error: %s", exc)
+        logger.error("Scheduled queries runner error: %s", exc, exc_info=True)
     finally:
         session.close()
 
@@ -215,3 +270,54 @@ async def run_anomaly_detection():
         run_anomaly_check()
     except Exception as exc:
         logger.warning("Anomaly detection run failed (non-fatal): %s", exc)
+
+
+def _evaluate_alert_condition(
+    query_result: str, alert_condition: str
+) -> tuple[bool, str]:
+    """
+    Use the LLM to evaluate whether an English-text alert condition is met
+    given a query result.
+
+    Returns:
+        (triggered: bool, reason: str)
+    """
+    import json
+
+    content = ""  # Initialize so it's always defined for error handling
+
+    try:
+        from backend.agents.llm import get_llm
+
+        llm = get_llm(temperature=0, json_mode=True)
+
+        prompt = (
+            "You are a data alert evaluator. Given a query result and an alert condition, "
+            "determine if the condition is met.\n\n"
+            f"QUERY RESULT:\n{query_result[:2000]}\n\n"
+            f"ALERT CONDITION:\n{alert_condition}\n\n"
+            "Respond with ONLY this JSON format (no extra text):\n"
+            '{"triggered": true, "reason": "the value 9999.75 exceeds the threshold of 5"}\n'
+            "or\n"
+            '{"triggered": false, "reason": "the value is within acceptable range"}\n'
+        )
+
+        logger.info("Calling LLM for alert evaluation...")
+        response = llm.invoke(prompt)
+        content = response.content.strip()
+        logger.info("LLM alert response: %s", content[:300])
+
+        parsed = json.loads(content)
+        triggered = bool(parsed.get("triggered", False))
+        reason = str(parsed.get("reason", "Alert condition evaluated"))
+
+        return triggered, reason
+
+    except json.JSONDecodeError:
+        logger.warning("LLM returned non-JSON for alert evaluation: %s", content[:300])
+        return False, "Could not parse LLM response"
+    except Exception as exc:
+        logger.error("Alert condition evaluation error: %s", exc, exc_info=True)
+        return False, f"Evaluation error: {str(exc)}"
+
+

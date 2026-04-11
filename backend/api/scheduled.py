@@ -37,6 +37,14 @@ class CreateScheduledRequest(BaseModel):
     )
     delivery: str = Field(..., pattern="^(EMAIL|DASHBOARD)$")
     delivery_email: str | None = None
+    alert_condition: str | None = Field(
+        None, max_length=1000,
+        description="English-text alert condition (e.g. 'Alert me if failure rate exceeds 5%')"
+    )
+    alert_severity: str | None = Field(
+        "MEDIUM", pattern="^(HIGH|MEDIUM|LOW)$",
+        description="Alert severity when condition triggers"
+    )
 
 
 class ScheduledQueryResponse(BaseModel):
@@ -47,6 +55,8 @@ class ScheduledQueryResponse(BaseModel):
     cron_expression: str
     delivery: str
     is_active: bool
+    alert_condition: str | None = None
+    alert_severity: str | None = None
     last_run_at: str | None = None
     next_run_at: str | None = None
     created_at: str | None = None
@@ -55,16 +65,15 @@ class ScheduledQueryResponse(BaseModel):
 
 
 class UpdateScheduledRequest(BaseModel):
-    """Request body for updating a scheduled query."""
+    """Request body for updating a scheduled query. All fields optional."""
 
-    is_active: bool
-
-
-class UpdateScheduledResponse(BaseModel):
-    """Response after updating a scheduled query."""
-
-    id: str
-    is_active: bool
+    query_text: str | None = None
+    cron_expression: str | None = None
+    delivery: str | None = Field(None, pattern="^(EMAIL|DASHBOARD)$")
+    delivery_email: str | None = None
+    is_active: bool | None = None
+    alert_condition: str | None = None
+    alert_severity: str | None = Field(None, pattern="^(HIGH|MEDIUM|LOW)$")
 
 
 class ScheduledReportResponse(BaseModel):
@@ -139,6 +148,8 @@ async def list_scheduled_queries(
             cron_expression=q.cron_expression,
             delivery=q.delivery,
             is_active=q.is_active,
+            alert_condition=q.alert_condition,
+            alert_severity=q.alert_severity,
             last_run_at=q.last_run_at.isoformat() if q.last_run_at else None,
             next_run_at=q.next_run_at.isoformat() if q.next_run_at else None,
             created_at=q.created_at.isoformat() if q.created_at else None,
@@ -184,6 +195,8 @@ async def create_scheduled_query(
         cron_expression=body.cron_expression,
         delivery=body.delivery,
         delivery_email=body.delivery_email,
+        alert_condition=body.alert_condition,
+        alert_severity=body.alert_severity or "MEDIUM",
         next_run_at=next_run,
     )
     db.add(query)
@@ -196,22 +209,24 @@ async def create_scheduled_query(
         cron_expression=query.cron_expression,
         delivery=query.delivery,
         is_active=query.is_active,
+        alert_condition=query.alert_condition,
+        alert_severity=query.alert_severity,
         next_run_at=query.next_run_at.isoformat() if query.next_run_at else None,
         created_at=query.created_at.isoformat() if query.created_at else None,
     )
 
 
 # ---------------------------------------------------------------------------
-# PATCH /scheduled/{id} — update is_active
+# PATCH /scheduled/{id} — update scheduled query fields
 # ---------------------------------------------------------------------------
-@router.patch("/{query_id}", response_model=UpdateScheduledResponse)
+@router.patch("/{query_id}", response_model=ScheduledQueryResponse)
 async def update_scheduled_query(
     query_id: str,
     body: UpdateScheduledRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Toggle a scheduled query on or off."""
+    """Update a scheduled query. All fields are optional."""
     try:
         query_uuid = uuid.UUID(query_id)
     except ValueError:
@@ -230,17 +245,50 @@ async def update_scheduled_query(
             detail="Scheduled query not found",
         )
 
-    query.is_active = body.is_active
+    # Apply provided fields
+    if body.query_text is not None:
+        query.query_text = body.query_text
+    if body.delivery is not None:
+        query.delivery = body.delivery
+    if body.delivery_email is not None:
+        query.delivery_email = body.delivery_email
+    if body.alert_condition is not None:
+        query.alert_condition = body.alert_condition if body.alert_condition else None
+    if body.alert_severity is not None:
+        query.alert_severity = body.alert_severity
+    if body.is_active is not None:
+        query.is_active = body.is_active
 
-    # Recompute next_run_at if reactivating
-    if body.is_active:
+    # Recompute next_run_at if cron changed or reactivating
+    if body.cron_expression is not None:
+        next_run = _compute_next_run(body.cron_expression)
+        if next_run is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid cron expression.",
+            )
+        query.cron_expression = body.cron_expression
+        query.next_run_at = next_run
+    elif body.is_active and not query.next_run_at:
         next_run = _compute_next_run(query.cron_expression)
         if next_run:
             query.next_run_at = next_run
 
     await db.commit()
+    await db.refresh(query)
 
-    return UpdateScheduledResponse(id=str(query.id), is_active=query.is_active)
+    return ScheduledQueryResponse(
+        id=str(query.id),
+        query_text=query.query_text,
+        cron_expression=query.cron_expression,
+        delivery=query.delivery,
+        is_active=query.is_active,
+        alert_condition=query.alert_condition,
+        alert_severity=query.alert_severity,
+        last_run_at=query.last_run_at.isoformat() if query.last_run_at else None,
+        next_run_at=query.next_run_at.isoformat() if query.next_run_at else None,
+        created_at=query.created_at.isoformat() if query.created_at else None,
+    )
 
 
 # ---------------------------------------------------------------------------
