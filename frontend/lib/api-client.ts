@@ -44,6 +44,7 @@ export interface User {
 export interface ChainOfThought {
   sources: string[]
   sql_executed: string
+  sql_results: object[]
   rag_chunks_used: number
   agent_path: string[]
   query_intent: string
@@ -51,6 +52,7 @@ export interface ChainOfThought {
   tables_searched: string[]
   tables_used: string[]
   teams_accessed: string[]
+  chart_type: 'BAR' | 'LINE' | 'PIE' | 'TABLE'
 }
 
 export interface Message {

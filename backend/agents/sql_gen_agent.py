@@ -141,6 +141,13 @@ Rules:
 - Do NOT wrap aggregates inside other aggregates (e.g. no json_agg around SUM).
 - When using UNION, ensure each SELECT has the same number of columns and apply LIMIT before the UNION, not after.
 
+OUTPUT SHAPE RULES:
+- For breakdowns by category: SELECT category_col, aggregation AS value ...GROUP BY category_col
+- For time-series: SELECT DATE_TRUNC('day', timestamp_col) AS date, aggregation AS value ...GROUP BY 1 ORDER BY 1
+- For comparisons: SELECT group_col, metric1, metric2 ...GROUP BY group_col
+- Always alias aggregated columns with readable names (total, count, amount, rate — not COUNT(*))
+- ORDER BY the aggregated value DESC for category breakdowns
+
 Database schema:
 {schema}
 """),
