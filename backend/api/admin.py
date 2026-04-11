@@ -15,10 +15,12 @@ Endpoints:
 
 import uuid
 import logging
+from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text, func, delete
+from sqlalchemy import select, text, func, delete, case
+from sqlalchemy.orm import aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.auth import require_platform_admin
@@ -193,37 +195,42 @@ async def list_teams(
     current_user: User = Depends(require_platform_admin),
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Return all teams with their table and member counts."""
-    result = await db.execute(select(Team).order_by(Team.name))
-    teams = result.scalars().all()
+    """Return all teams with their table and member counts.
 
-    summaries = []
-    for team in teams:
-        # Count active tables
-        table_count_result = await db.execute(
-            select(func.count(MasterConfig.id)).where(
-                MasterConfig.team_id == team.id,
-                MasterConfig.is_active == True,
-            )
+    Uses a single aggregated query with LEFT JOINs instead of N+1 queries.
+    """
+    # Single query: count active tables and members per team via LEFT JOINs
+    stmt = (
+        select(
+            Team.id,
+            Team.name,
+            func.count(
+                func.distinct(
+                    case(
+                        (MasterConfig.is_active == True, MasterConfig.id),
+                        else_=None,
+                    )
+                )
+            ).label("table_count"),
+            func.count(func.distinct(User.id)).label("member_count"),
         )
-        table_count = table_count_result.scalar() or 0
+        .outerjoin(MasterConfig, (MasterConfig.team_id == Team.id))
+        .outerjoin(User, User.team_id == Team.id)
+        .group_by(Team.id, Team.name)
+        .order_by(Team.name)
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
 
-        # Count members
-        member_count_result = await db.execute(
-            select(func.count(User.id)).where(User.team_id == team.id)
+    return [
+        TeamSummary(
+            id=str(row.id),
+            name=row.name,
+            table_count=row.table_count,
+            member_count=row.member_count,
         )
-        member_count = member_count_result.scalar() or 0
-
-        summaries.append(
-            TeamSummary(
-                id=str(team.id),
-                name=team.name,
-                table_count=table_count,
-                member_count=member_count,
-            )
-        )
-
-    return summaries
+        for row in rows
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -392,46 +399,51 @@ async def list_all_users(
     current_user: User = Depends(require_platform_admin),
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Return all users with their team and cross-team access information."""
-    result = await db.execute(
-        select(User).order_by(User.created_at.desc())
+    """Return all users with their team and cross-team access information.
+
+    Uses 2 queries total instead of 2*N+1 (one for users+team, one for all access rows).
+    """
+    # Query 1: All users with their team name via LEFT JOIN
+    TeamAlias = aliased(Team)
+    user_stmt = (
+        select(User, TeamAlias.name.label("team_name"))
+        .outerjoin(TeamAlias, User.team_id == TeamAlias.id)
+        .order_by(User.created_at.desc())
     )
-    users = result.scalars().all()
+    user_result = await db.execute(user_stmt)
+    user_rows = user_result.all()
 
-    user_responses = []
-    for user in users:
-        # Fetch team name
-        team_name = None
-        if user.team_id:
-            team_result = await db.execute(
-                select(Team.name).where(Team.id == user.team_id)
-            )
-            team_name = team_result.scalar_one_or_none()
-
-        # Fetch accessible teams
-        access_result = await db.execute(
-            select(UserTeamAccess, Team.name.label("team_name"))
-            .join(Team, UserTeamAccess.team_id == Team.id)
-            .where(UserTeamAccess.user_id == user.id)
+    # Query 2: All access rows for ALL users in a single batch
+    access_stmt = (
+        select(
+            UserTeamAccess.user_id,
+            UserTeamAccess.team_id,
+            Team.name.label("team_name"),
         )
-        accessible_teams = [
-            AccessibleTeam(team_id=str(access.team_id), team_name=team_name_val)
-            for access, team_name_val in access_result.all()
-        ]
+        .join(Team, UserTeamAccess.team_id == Team.id)
+    )
+    access_result = await db.execute(access_stmt)
+    access_rows = access_result.all()
 
-        user_responses.append(
-            AdminUserResponse(
-                id=str(user.id),
-                name=user.name,
-                email=user.email,
-                role=user.role,
-                team_id=str(user.team_id) if user.team_id else None,
-                team_name=team_name,
-                accessible_teams=accessible_teams,
-            )
+    # Build lookup: user_id -> list of AccessibleTeam
+    access_map: dict[uuid.UUID, list[AccessibleTeam]] = defaultdict(list)
+    for row in access_rows:
+        access_map[row.user_id].append(
+            AccessibleTeam(team_id=str(row.team_id), team_name=row.team_name)
         )
 
-    return user_responses
+    return [
+        AdminUserResponse(
+            id=str(user.id),
+            name=user.name,
+            email=user.email,
+            role=user.role,
+            team_id=str(user.team_id) if user.team_id else None,
+            team_name=team_name,
+            accessible_teams=access_map.get(user.id, []),
+        )
+        for user, team_name in user_rows
+    ]
 
 
 # ---------------------------------------------------------------------------
