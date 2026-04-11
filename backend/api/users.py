@@ -127,3 +127,81 @@ async def update_me(
         name=current_user.name,
         persona=current_user.persona,
     )
+
+
+# ---------------------------------------------------------------------------
+# Pydantic Schema for team members
+# ---------------------------------------------------------------------------
+class TeamMemberResponse(BaseModel):
+    """Response shape for a team member."""
+
+    id: str
+    name: str
+    email: str
+    persona: str
+    role: str
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TeamInfoResponse(BaseModel):
+    """Full team info with members."""
+
+    team_id: str
+    team_name: str
+    members: list[TeamMemberResponse]
+
+
+# ---------------------------------------------------------------------------
+# GET /users/team — list all members in the current user's team
+# ---------------------------------------------------------------------------
+@router.get("/team", response_model=TeamInfoResponse)
+async def get_team_members(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Return all users belonging to the authenticated user's team.
+    Includes name, email, persona, role, and join date.
+    """
+    if not current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are not assigned to any team",
+        )
+
+    # Fetch team name
+    team_result = await db.execute(
+        select(Team).where(Team.id == current_user.team_id)
+    )
+    team = team_result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found",
+        )
+
+    # Fetch all members in this team
+    members_result = await db.execute(
+        select(User)
+        .where(User.team_id == current_user.team_id)
+        .order_by(User.created_at.asc())
+    )
+    members = members_result.scalars().all()
+
+    return TeamInfoResponse(
+        team_id=str(team.id),
+        team_name=team.name,
+        members=[
+            TeamMemberResponse(
+                id=str(m.id),
+                name=m.name,
+                email=m.email,
+                persona=m.persona,
+                role=m.role,
+                created_at=m.created_at.isoformat() if m.created_at else "",
+            )
+            for m in members
+        ],
+    )
