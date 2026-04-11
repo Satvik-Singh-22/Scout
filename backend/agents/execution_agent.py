@@ -1,7 +1,6 @@
 from sqlalchemy import text
 from backend.db.session import get_sync_session
 from backend.agents.state import PipelineState
-import re
 
 FORBIDDEN_KEYWORDS = ["DROP", "DELETE", "UPDATE", "INSERT", "CREATE", "ALTER", "TRUNCATE", "GRANT", "REVOKE"]
 
