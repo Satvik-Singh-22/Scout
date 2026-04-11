@@ -145,7 +145,11 @@ async def list_chatrooms(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Return all chatrooms belonging to the authenticated user."""
+    """Return all chatrooms belonging to the authenticated user.
+
+    Uses 2 queries instead of N+1: one for chatrooms, one batch for latest messages.
+    """
+    # Query 1: All chatrooms for this user
     result = await db.execute(
         select(Chatroom)
         .where(Chatroom.user_id == current_user.id)
@@ -153,29 +157,49 @@ async def list_chatrooms(
     )
     chatrooms = result.scalars().all()
 
-    response = []
-    for cr in chatrooms:
-        # Fetch latest message preview
-        msg_result = await db.execute(
-            select(Message.content)
-            .where(Message.chatroom_id == cr.id)
-            .order_by(Message.created_at.desc())
-            .limit(1)
-        )
-        last_msg = msg_result.scalar_one_or_none()
+    if not chatrooms:
+        return []
 
-        response.append(
-            ChatroomResponse(
-                id=str(cr.id),
-                name=cr.name,
-                created_at=cr.created_at.isoformat(),
-                last_message_preview=(
-                    last_msg[:100] + "..." if last_msg and len(last_msg) > 100 else last_msg
-                ),
-            )
+    # Query 2: Latest message per chatroom in a single batch query
+    # Use a subquery to find the max created_at per chatroom, then join to get content
+    chatroom_ids = [cr.id for cr in chatrooms]
+
+    # Subquery: get the latest message timestamp per chatroom
+    latest_ts = (
+        select(
+            Message.chatroom_id,
+            func.max(Message.created_at).label("max_created_at"),
+        )
+        .where(Message.chatroom_id.in_(chatroom_ids))
+        .group_by(Message.chatroom_id)
+        .subquery()
+    )
+
+    # Main query: join back to get the actual message content
+    msg_result = await db.execute(
+        select(Message.chatroom_id, Message.content)
+        .join(
+            latest_ts,
+            (Message.chatroom_id == latest_ts.c.chatroom_id)
+            & (Message.created_at == latest_ts.c.max_created_at),
+        )
+    )
+    preview_map: dict = {}
+    for row in msg_result.all():
+        content = row.content
+        preview_map[row.chatroom_id] = (
+            content[:100] + "..." if content and len(content) > 100 else content
         )
 
-    return response
+    return [
+        ChatroomResponse(
+            id=str(cr.id),
+            name=cr.name,
+            created_at=cr.created_at.isoformat(),
+            last_message_preview=preview_map.get(cr.id),
+        )
+        for cr in chatrooms
+    ]
 
 
 # ---------------------------------------------------------------------------
