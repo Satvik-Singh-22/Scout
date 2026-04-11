@@ -130,17 +130,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             })}
           </nav>
           
-          <div className="mt-auto flex flex-col gap-1 pt-4 border-t border-outline-variant/10">
+          <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-gray-200/60">
             {/* User info card */}
             {user && (
-              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl mb-3 border border-indigo-100 dark:border-indigo-800">
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl mb-2 border border-indigo-100 dark:border-indigo-800">
                 <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1">SIGNED IN AS</div>
                 <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.name}</div>
                 <div className="text-[10px] text-gray-500 truncate mt-0.5">{user.email}</div>
               </div>
             )}
-            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 text-error hover:bg-red-50 rounded-lg text-sm transition-all w-full text-left">
-              <span className="material-symbols-outlined">logout</span>
+            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 text-error hover:bg-red-50 rounded-lg text-sm font-medium transition-all w-full text-left">
+              <span className="material-symbols-outlined text-[20px]">logout</span>
               Logout
             </button>
           </div>

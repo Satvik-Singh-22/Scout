@@ -42,6 +42,7 @@ router = APIRouter()
 class TeamAssignment(BaseModel):
     """A team's assignment for a specific table."""
 
+    config_id: str
     team_id: str
     team_name: str
     is_active: bool
@@ -167,6 +168,7 @@ async def list_all_tables(
             assignments_map[config.table_name] = []
         assignments_map[config.table_name].append(
             TeamAssignment(
+                config_id=str(config.id),
                 team_id=str(config.team_id),
                 team_name=team_name,
                 is_active=config.is_active,
@@ -273,6 +275,11 @@ async def assign_tables(
         await db.flush()
 
     assigned_count = 0
+
+    # We will need the LLM components for meaning generation
+    from backend.agents.llm import get_llm
+    from langchain_core.messages import SystemMessage, HumanMessage
+
     for assignment in body.table_assignments:
         # Check if this table is already assigned to this team
         existing = await db.execute(
@@ -283,17 +290,52 @@ async def assign_tables(
         )
         existing_config = existing.scalar_one_or_none()
 
+        # Decide if we need to generate semantic_definition via Groq
+        # The frontend provides a default pattern 'Data from X table.'
+        final_semantic = assignment.semantic_definition
+        is_default = final_semantic.startswith("Data from") and final_semantic.endswith("table.")
+        
+        if is_default or not final_semantic:
+            try:
+                # 1. Fetch schema for this table
+                schema_query = await db.execute(
+                    text("""
+                        SELECT column_name, data_type 
+                        FROM information_schema.columns 
+                        WHERE table_name = :t_name
+                          AND table_schema = 'public'
+                    """),
+                    {"t_name": assignment.table_name}
+                )
+                columns = schema_query.fetchall()
+                if columns:
+                    schema_str = "\n".join([f"- {col[0]} ({col[1]})" for col in columns])
+                    
+                    # 2. Call LLM for generation
+                    llm = get_llm(temperature=0.3)
+                    prompt = f"Given the database table '{assignment.table_name}' with the following columns:\n{schema_str}\n\nWhat is the business purpose of this table? Provide a 1-3 sentence detailed yet concise professional explanation."
+                    
+                    logger.info(f"Generating purpose for table {assignment.table_name} via LLM")
+                    res = await llm.ainvoke([
+                        SystemMessage(content="You are an expert data architect. You provide highly accurate, concise semantics for database tables."),
+                        HumanMessage(content=prompt)
+                    ])
+                    final_semantic = res.content.strip()
+            except Exception as e:
+                logger.error(f"Error generating purpose for {assignment.table_name}: {e}")
+                # Keep the fallback `final_semantic`
+
         if existing_config:
             # Re-activate if it was deactivated
             existing_config.is_active = True
-            existing_config.semantic_definition = assignment.semantic_definition
+            existing_config.semantic_definition = final_semantic
             existing_config.columns_metadata = assignment.columns_metadata
         else:
             config = MasterConfig(
                 db_connection_id=db_conn.id,
                 team_id=team_uuid,
                 table_name=assignment.table_name,
-                semantic_definition=assignment.semantic_definition,
+                semantic_definition=final_semantic,
                 columns_metadata=assignment.columns_metadata,
             )
             db.add(config)
