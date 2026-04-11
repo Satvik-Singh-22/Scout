@@ -291,6 +291,39 @@ async def update_scheduled_query(
     )
 
 
+
+# ---------------------------------------------------------------------------
+# DELETE /scheduled/{id} — delete a scheduled query
+# ---------------------------------------------------------------------------
+@router.delete("/{query_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_scheduled_query(
+    query_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Permanently delete a scheduled query owned by the authenticated user."""
+    try:
+        query_uuid = uuid.UUID(query_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid query ID"
+        )
+
+    result = await db.execute(
+        select(ScheduledQuery).where(ScheduledQuery.id == query_uuid)
+    )
+    query = result.scalar_one_or_none()
+
+    if not query or query.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scheduled query not found",
+        )
+
+    await db.delete(query)
+    await db.commit()
+
+
 # ---------------------------------------------------------------------------
 # GET /scheduled/{id}/history — execution history
 # ---------------------------------------------------------------------------

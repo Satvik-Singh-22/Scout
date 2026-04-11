@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getScheduled, toggleScheduled } from '@/lib/api-client'
+import { getScheduled, toggleScheduled, deleteScheduled } from '@/lib/api-client'
 import type { ScheduledQuery } from '@/lib/api-client'
 import ScheduledQueryForm from '@/components/ScheduledQueryForm'
 import { Clock } from 'lucide-react'
@@ -91,6 +91,18 @@ export default function ScheduledPage() {
     setShowForm(true)
     // Scroll to top to show the form
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDelete = async (q: ScheduledQuery) => {
+    if (!confirm(`Delete scheduled query "${q.query_text.slice(0, 60)}${q.query_text.length > 60 ? '…' : ''}"? This cannot be undone.`)) return
+    // Optimistic removal
+    setQueries(prev => prev.filter(x => x.id !== q.id))
+    try {
+      await deleteScheduled(q.id)
+    } catch {
+      setError('Failed to delete scheduled query')
+      loadQueries()
+    }
   }
 
   const handleNewSchedule = () => {
@@ -241,6 +253,14 @@ export default function ScheduledPage() {
                         <span className="material-symbols-outlined text-sm">history</span>
                         History
                       </Link>
+                      <button
+                        onClick={() => handleDelete(q)}
+                        className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 font-medium text-xs px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
+                        title="Delete this schedule"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChatrooms, createChatroom } from '@/lib/api-client'
+import { getChatrooms, createChatroom, renameChatroom } from '@/lib/api-client'
 import type { Chatroom } from '@/lib/api-client'
 
 function timeAgo(dateStr: string): string {
@@ -29,11 +29,25 @@ export default function ChatHubPage() {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
+  // Inline rename state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [renameLoading, setRenameLoading] = useState(false)
+  const editInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     getChatrooms()
       .then(data => { setChatrooms(data); setLoading(false) })
       .catch(err => { setError(err.message || 'Failed to load sessions'); setLoading(false) })
   }, [])
+
+  // Focus the input when editing starts
+  useEffect(() => {
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus()
+      editInputRef.current.select()
+    }
+  }, [editingId])
 
   const handleNewChat = async () => {
     setCreating(true)
@@ -48,7 +62,49 @@ export default function ChatHubPage() {
   }
 
   const handleOpenRoom = (id: string) => {
+    if (editingId === id) return // Don't navigate while editing
     router.push(`/chat/${id}`)
+  }
+
+  const startEditing = (e: React.MouseEvent, room: Chatroom) => {
+    e.stopPropagation()
+    setEditingId(room.id)
+    setEditingName(room.name)
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
+    setEditingName('')
+  }
+
+  const saveRename = async () => {
+    if (!editingId || !editingName.trim() || renameLoading) return
+    const trimmedName = editingName.trim()
+    // Find original name to check if changed
+    const original = chatrooms.find(r => r.id === editingId)
+    if (original && original.name === trimmedName) {
+      cancelEditing()
+      return
+    }
+    setRenameLoading(true)
+    try {
+      const updated = await renameChatroom(editingId, trimmedName)
+      setChatrooms(prev => prev.map(r => r.id === updated.id ? { ...r, name: updated.name } : r))
+      cancelEditing()
+    } catch {
+      setError('Failed to rename chat session')
+    } finally {
+      setRenameLoading(false)
+    }
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveRename()
+    } else if (e.key === 'Escape') {
+      cancelEditing()
+    }
   }
 
   return (
@@ -71,8 +127,11 @@ export default function ChatHubPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-          {error}
+        <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 ml-2">
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
         </div>
       )}
 
@@ -113,21 +172,66 @@ export default function ChatHubPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {chatrooms.map((room, index) => {
               const accent = ACCENT_COLORS[index % ACCENT_COLORS.length]
+              const isEditing = editingId === room.id
               return (
                 <div
                   key={room.id}
                   onClick={() => handleOpenRoom(room.id)}
-                  className="group bg-white rounded-xl p-6 shadow-sm border border-gray-100/80 hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-300 flex flex-col justify-between h-48 cursor-pointer relative overflow-hidden"
+                  className={`group bg-white rounded-xl p-6 shadow-sm border transition-all duration-300 flex flex-col justify-between h-48 relative overflow-hidden ${isEditing ? 'border-indigo-300 shadow-md ring-2 ring-indigo-500/20' : 'border-gray-100/80 hover:shadow-xl hover:shadow-gray-200/60 cursor-pointer'}`}
                 >
-                  <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="material-symbols-outlined text-gray-300 text-lg">open_in_new</span>
+                  {/* Edit & Open icons */}
+                  <div className="absolute top-0 right-0 p-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={(e) => startEditing(e, room)}
+                      className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-300 hover:text-indigo-500 transition-colors"
+                      title="Rename chat"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <span className="material-symbols-outlined text-gray-300 text-[16px]">open_in_new</span>
                   </div>
+
                   <div>
                     <div className={`w-10 h-10 rounded-lg ${accent.bg} ${accent.text} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-lg`}>
                       {accent.icon}
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 leading-tight truncate pr-4">{room.name}</h3>
-                    {room.last_message_preview && (
+
+                    {/* Inline rename input or title */}
+                    {isEditing ? (
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          ref={editInputRef}
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={handleEditKeyDown}
+                          onBlur={saveRename}
+                          maxLength={255}
+                          disabled={renameLoading}
+                          className="flex-1 text-sm font-semibold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all disabled:opacity-50"
+                          placeholder="Chat name…"
+                        />
+                        <button
+                          onClick={saveRename}
+                          disabled={renameLoading || !editingName.trim()}
+                          className="p-1 text-emerald-500 hover:text-emerald-600 disabled:opacity-40 transition-colors"
+                          title="Save"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">check</span>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); cancelEditing() }}
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="Cancel"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <h3 className="text-base font-bold text-gray-900 leading-tight truncate pr-12">{room.name}</h3>
+                    )}
+
+                    {room.last_message_preview && !isEditing && (
                       <p className="text-xs text-gray-400 mt-1 line-clamp-1">{room.last_message_preview}</p>
                     )}
                   </div>
