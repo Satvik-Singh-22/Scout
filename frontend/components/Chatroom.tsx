@@ -1,73 +1,108 @@
-'use client'
-import { useState, useEffect, useRef } from 'react'
-import { getMessages, streamMessage } from '@/lib/api-client'
-import type { Message, ChainOfThought as CoTType } from '@/lib/api-client'
-import MessageBubble from './MessageBubble'
-import { Send } from 'lucide-react'
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { getMessages, streamMessage } from '@/lib/api-client';
+import type { Message, ChainOfThought as CoTType } from '@/lib/api-client';
+import MessageBubble from './MessageBubble';
+import { Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Props {
-  chatroomId: string
-  userPersona: 'MANAGER' | 'DEVELOPER'
-  onPersonaChange?: (persona: 'MANAGER' | 'DEVELOPER') => void
+  chatroomId: string;
+  userPersona: 'MANAGER' | 'DEVELOPER';
+  onPersonaChange?: (persona: 'MANAGER' | 'DEVELOPER') => void;
+  initialQuery?: string;
 }
 
 function DevIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M4 5L1 8l3 3M12 5l3 3-3 3M9 3l-2 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path
+        d="M4 5L1 8l3 3M12 5l3 3-3 3M9 3l-2 10"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
-  )
+  );
 }
 
 function MgrIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.4" />
+      <rect
+        x="2"
+        y="4"
+        width="12"
+        height="9"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
     </svg>
-  )
+  );
 }
 
-export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: Props) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [streamingContent, setStreamingContent] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
+export default function Chatroom({
+  chatroomId,
+  userPersona,
+  onPersonaChange,
+  initialQuery,
+}: Props) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const didAutoSend = useRef(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getMessages(chatroomId).then(setMessages).catch(() => { })
-  }, [chatroomId])
+    getMessages(chatroomId)
+      .then(setMessages)
+      .catch(() => {});
+  }, [chatroomId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, streamingContent])
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingContent]);
+
+  // Auto-send initialQuery from dashboard Quick Ask
+  useEffect(() => {
+    if (initialQuery && !didAutoSend.current) {
+      didAutoSend.current = true;
+      handleSendQuery(initialQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
 
   const handleSendQuery = (query: string) => {
-    if (!query.trim() || isStreaming) return
-    setIsStreaming(true)
-    setStreamingContent('')
+    if (!query.trim() || isStreaming) return;
+    setIsStreaming(true);
+    setStreamingContent('');
 
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'USER',
       content: query.trim(),
       chain_of_thought: null,
-      created_at: new Date().toISOString()
-    }
-    setMessages(prev => [...prev, userMsg])
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
 
-    let accumulated = ''
+    let accumulated = '';
 
     const stop = streamMessage(
       chatroomId,
       query.trim(),
       userPersona,
       (chunk) => {
-        accumulated += chunk
-        setStreamingContent(accumulated)
+        accumulated += chunk;
+        setStreamingContent(accumulated);
       },
       (cot: CoTType) => {
         const assistantMsg: Message = {
@@ -75,11 +110,11 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
           role: 'ASSISTANT',
           content: accumulated,
           chain_of_thought: cot,
-          created_at: new Date().toISOString()
-        }
-        setMessages(prev => [...prev, assistantMsg])
-        setStreamingContent('')
-        setIsStreaming(false)
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+        setStreamingContent('');
+        setIsStreaming(false);
       },
       (err) => {
         const errMsg: Message = {
@@ -87,23 +122,23 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
           role: 'ASSISTANT',
           content: `Error: ${err}`,
           chain_of_thought: null,
-          created_at: new Date().toISOString()
-        }
-        setMessages(prev => [...prev, errMsg])
-        setStreamingContent('')
-        setIsStreaming(false)
-      }
-    )
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+        setStreamingContent('');
+        setIsStreaming(false);
+      },
+    );
 
-    return () => stop()
-  }
+    return () => stop();
+  };
 
   const handleSend = () => {
-    if (!input.trim() || isStreaming) return
-    const query = input.trim()
-    setInput('')
-    handleSendQuery(query)
-  }
+    if (!input.trim() || isStreaming) return;
+    const query = input.trim();
+    setInput('');
+    handleSendQuery(query);
+  };
 
   const personas = [
     {
@@ -122,7 +157,7 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
       activeColor: 'text-violet-600',
       activeBg: 'bg-white border border-gray-200',
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -131,11 +166,18 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
         {messages.length === 0 && !isStreaming && (
           <div className="text-center text-gray-400 mt-16">
             <p className="text-lg font-medium">Ask anything about your data</p>
-            <p className="text-sm mt-1">Try: &quot;What is total payment volume this week?&quot;</p>
+            <p className="text-sm mt-1">
+              Try: &quot;What is total payment volume this week?&quot;
+            </p>
           </div>
         )}
-        {messages.map(msg => (
-          <MessageBubble key={msg.id} message={msg} persona={userPersona} onResend={handleSendQuery} />
+        {messages.map((msg) => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            persona={userPersona}
+            onResend={handleSendQuery}
+          />
         ))}
         {isStreaming && streamingContent && (
           <div className="flex justify-start">
@@ -153,11 +195,10 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
       {/* Input area */}
       <div className="sticky bottom-0 border-t border-gray-200 px-6 py-4 bg-white">
         <div className="flex items-center gap-3">
-
           {/* Persona toggle */}
           <div className="flex items-center bg-gray-100 rounded-xl p-0.5 gap-0.5 shrink-0">
-            {personas.map(p => {
-              const isActive = userPersona === p.key
+            {personas.map((p) => {
+              const isActive = userPersona === p.key;
               return (
                 <button
                   key={p.key}
@@ -170,15 +211,19 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
                     ${isActive ? p.activeBg + ' shadow-sm' : 'hover:bg-white/50'}
                   `}
                 >
-                  <div className={`flex items-center gap-1.5 ${isActive ? p.activeColor : 'text-gray-400'}`}>
+                  <div
+                    className={`flex items-center gap-1.5 ${isActive ? p.activeColor : 'text-gray-400'}`}
+                  >
                     {p.icon}
                     <span className="text-xs font-semibold">{p.label}</span>
                   </div>
-                  <span className={`text-[10px] leading-tight ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <span
+                    className={`text-[10px] leading-tight ${isActive ? 'text-gray-500' : 'text-gray-400'}`}
+                  >
                     {p.desc}
                   </span>
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -186,8 +231,8 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
           <input
             type="text"
             value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Ask a question about your data..."
             disabled={isStreaming}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
@@ -202,5 +247,5 @@ export default function Chatroom({ chatroomId, userPersona, onPersonaChange }: P
         </div>
       </div>
     </div>
-  )
+  );
 }
