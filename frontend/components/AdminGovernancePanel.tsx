@@ -107,10 +107,10 @@ export default function AdminGovernancePanel() {
   const filteredTables = tables.filter(t => t.table_name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto h-screen overflow-hidden flex flex-col">
       
       {/* Tab Navigation */}
-      <div className="flex gap-4 border-b border-gray-200">
+      <div className="flex gap-4 border-b border-gray-200 shrink-0">
         <button 
           className={`pb-4 px-2 text-sm font-bold transition-all relative ${activeTab === 'tables' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'}`}
           onClick={() => setActiveTab('tables')}
@@ -129,7 +129,7 @@ export default function AdminGovernancePanel() {
 
       {/* Tables Tab Config */}
       {activeTab === 'tables' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 min-h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 overflow-hidden">
           {/* Sidebar - Teams */}
           <div className="col-span-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-100 bg-gray-50/50">
@@ -256,7 +256,7 @@ export default function AdminGovernancePanel() {
 
       {/* Users Tab Config */}
       {activeTab === 'users' && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             <h2 className="text-xl font-bold text-gray-900 mb-2">Cross-Domain Analytics Privileges</h2>
             <p className="text-sm text-gray-500 mb-8 leading-relaxed">
