@@ -57,10 +57,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl h-16 w-full fixed top-0 z-40 flex items-center justify-between px-6 shadow-sm border-b border-outline-variant/10 font-manrope">
         <div className="flex items-center gap-8">
           <Link href={user?.role === 'PLATFORM_ADMIN' ? '/admin' : '/chat'} className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-              <span className="font-bold text-sm">B</span>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+              <span className="font-bold text-sm">S</span>
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Banquoite</span>
+            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Scout</span>
           </Link>
           <nav className="hidden md:flex gap-6 items-center">
             {topNavLinks.map(link => (
@@ -99,11 +99,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         {/* SideNavBar */}
         <aside className="bg-gray-50 dark:bg-gray-950 w-64 fixed left-0 top-16 bottom-0 hidden md:flex flex-col p-4 gap-2 border-r border-outline-variant/10 z-30 font-inter text-sm font-medium">
           <div className="flex items-center gap-3 px-2 py-3 mb-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-              <span className="font-bold font-manrope">B</span>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+              <span className="font-bold font-manrope">S</span>
             </div>
             <div>
-              <div className="text-lg font-bold font-manrope text-indigo-600 leading-tight">Banquoite</div>
+              <div className="text-lg font-bold font-manrope text-emerald-600 leading-tight">Scout</div>
               <div className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">
                 {user?.role ? user.role.replace('_', ' ') : 'Loading...'}
               </div>

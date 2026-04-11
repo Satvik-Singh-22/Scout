@@ -86,7 +86,7 @@ export default function OnboardingFlow() {
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Connect Your Database</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Banquoite needs read-only access to build semantic search capabilities.
+            Scout needs read-only access to build semantic search capabilities.
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export default function OnboardingFlow() {
                 name="username"
                 value={form.username}
                 onChange={handleChange}
-                placeholder="banquoite_ro_user"
+                placeholder="scout_ro_user"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>

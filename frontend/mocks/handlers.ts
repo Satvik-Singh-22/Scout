@@ -13,7 +13,7 @@ const MOCK_USER = {
 
 const MOCK_ADMIN_USER = {
   id: 'admin-1',
-  email: 'admin@banquoite.dev',
+  email: 'admin@scout.dev',
   name: 'Platform Admin',
   persona: 'MANAGER' as const,
   role: 'PLATFORM_ADMIN' as const,
@@ -38,7 +38,7 @@ export const handlers = [
   // ─────────────────────────────────────────
   http.post('*/auth/login', async ({ request }) => {
     const body = await request.json() as { email?: string; password?: string }
-    if (body.email === 'admin@banquoite.dev') {
+    if (body.email === 'admin@scout.dev') {
       activeUser = MOCK_ADMIN_USER
       return HttpResponse.json({ access_token: 'mock-admin-token', user: MOCK_ADMIN_USER })
     }
@@ -323,7 +323,7 @@ export const handlers = [
       {
         id: 'u-2',
         name: 'Enterprise User',
-        email: 'enterprise@banquoite.dev',
+        email: 'enterprise@scout.dev',
         role: 'ENTERPRISE_ANALYST',
         team_id: 'team-a',
         team_name: 'Team A — Payments',
@@ -335,7 +335,7 @@ export const handlers = [
       {
         id: 'u-3',
         name: 'Risk Analyst',
-        email: 'risk@banquoite.dev',
+        email: 'risk@scout.dev',
         role: 'ANALYST',
         team_id: 'team-c',
         team_name: 'Team C — Risk',

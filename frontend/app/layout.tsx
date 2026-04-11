@@ -17,8 +17,8 @@ const inter = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Banquoite',
-  description: 'Enterprise AI portal for NatWest banking teams.',
+  title: 'Scout',
+  description: 'Enterprise AI Data Intelligence Platform',
 }
 
 export default function RootLayout({

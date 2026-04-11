@@ -1,5 +1,5 @@
 """
-Banquoite — Authentication & Authorization
+Scout — Authentication & Authorization
 
 Endpoints:
   POST /auth/register — create a new user account

@@ -1,5 +1,5 @@
 """
-Banquoite — SQLAlchemy ORM Models
+Scout — SQLAlchemy ORM Models
 
 All 12 core application tables as defined in the Master Shared Context (Section 5).
 Uses PostgreSQL-specific types (UUID, JSONB) with timezone-aware timestamps.

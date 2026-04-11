@@ -142,7 +142,7 @@ export async function login(email: string, password: string) {
 
 export async function register(payload: {
   email: string; password: string; name: string;
-  persona: string; role: string; team_name: string
+  persona: string; role: string; team_id: string
 }) {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: 'POST',

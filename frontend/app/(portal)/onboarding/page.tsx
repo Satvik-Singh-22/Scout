@@ -14,7 +14,7 @@ export default function OnboardingConnectPage() {
     port: '5432',
     dbName: 'analytics_prod_v2',
     schema: 'public, core_marketing',
-    username: 'banquoite_svc_user',
+    username: 'scout_svc_user',
     password: 'password123'
   })
 
@@ -69,7 +69,7 @@ export default function OnboardingConnectPage() {
         <div className="bg-surface-container-lowest rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
           <div className="p-8 border-b border-gray-100">
             <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">Connect your Enterprise Datahub</h2>
-            <p className="text-gray-500 mt-2 text-sm leading-relaxed max-w-lg">Banquoite needs read-only access to your central database to build semantic search capabilities.</p>
+            <p className="text-gray-500 mt-2 text-sm leading-relaxed max-w-lg">Scout needs read-only access to your central database to build semantic search capabilities.</p>
           </div>
           
           <div className="p-8 bg-gray-50/50">
@@ -128,7 +128,7 @@ export default function OnboardingConnectPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Username (Read-Only required)</label>
-                <input name="username" value={form.username} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="banquoite_ro_user"/>
+                <input name="username" value={form.username} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="scout_ro_user"/>
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">

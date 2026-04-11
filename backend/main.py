@@ -1,5 +1,5 @@
 """
-Banquoite — FastAPI Application Entry Point
+Scout — FastAPI Application Entry Point
 
 Initialises the FastAPI application with:
   - Lifespan-managed background scheduler (start/stop)
@@ -46,10 +46,10 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Start the background scheduler on startup, shut it down on exit."""
-    logger.info("Starting Banquoite API — initialising background services")
+    logger.info("Starting Scout API — initialising background services")
     start_scheduler()
     yield
-    logger.info("Shutting down Banquoite API — stopping background services")
+    logger.info("Shutting down Scout API — stopping background services")
     shutdown_scheduler()
 
 
@@ -57,9 +57,9 @@ async def lifespan(app: FastAPI):
 # FastAPI Application
 # ---------------------------------------------------------------------------
 app = FastAPI(
-    title="Banquoite API",
+    title="Scout API",
     description=(
-        "Enterprise AI portal for NatWest banking teams. "
+        "Enterprise AI Data Intelligence Platform. "
         "Natural language queries against segregated enterprise data "
         "with Chain of Thought transparency."
     ),
@@ -101,4 +101,4 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 @app.get("/health", tags=["System"])
 def health():
     """Health check endpoint for load balancers and monitoring."""
-    return {"status": "ok", "service": "banquoite-api", "version": "1.0.0"}
+    return {"status": "ok", "service": "scout-api", "version": "1.0.0"}

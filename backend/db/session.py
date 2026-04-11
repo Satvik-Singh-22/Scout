@@ -1,5 +1,5 @@
 """
-Banquoite — Database Session Management
+Scout — Database Session Management
 
 Provides two session factories:
   1. Async (AsyncSession) — used by FastAPI route handlers via Depends()

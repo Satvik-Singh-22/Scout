@@ -1,1 +1,1 @@
-# Banquoite Backend Package
+# Scout Backend Package
