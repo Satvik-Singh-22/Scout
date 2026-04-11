@@ -28,6 +28,33 @@ from backend.db.session import get_async_session
 
 logger = logging.getLogger(__name__)
 
+import decimal, datetime, uuid
+
+class _JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return obj.isoformat()
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
+def _dumps(obj) -> str:
+    return json.dumps(obj, cls=_JSONEncoder)
+
+def _sanitize_for_json(obj):
+    """Recursively convert non-JSON-serializable types in a dict/list."""
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_for_json(i) for i in obj]
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    if isinstance(obj, uuid.UUID):
+        return str(obj)
+    return obj
 # ---------------------------------------------------------------------------
 # Try to import the real pipeline; fall back to a mock for independent testing
 # ---------------------------------------------------------------------------
@@ -107,6 +134,7 @@ class SendMessageRequest(BaseModel):
     """Request body for sending a message to the pipeline."""
 
     query: str = Field(..., min_length=1, max_length=5000)
+    persona: str | None = Field(None, pattern="^(MANAGER|DEVELOPER)$")
 
 
 # ---------------------------------------------------------------------------
@@ -277,13 +305,44 @@ async def send_message(
 
     logger.info("[CHAT DEBUG] user=%s, team_id=%s, allowed_team_ids=%s", current_user.email, current_user.team_id, allowed_team_ids)
 
+    # Fetch last 3 messages to find the previous complete turn (1 user + 1 assistant)
+    # We fetch 3 because the current user message is already saved in the DB.
+    history_result = await db.execute(
+        select(Message)
+        .where(Message.chatroom_id == cr_uuid)
+        .order_by(Message.created_at.desc())
+        .limit(3)
+    )
+    recent_messages = history_result.scalars().all()
+    recent_messages.reverse()  # oldest first
+
+    # Extract the most recent user+assistant pair
+    previous_query = ""
+    previous_answer = ""
+    previous_sql = ""
+    previous_tables_used = []
+
+    # Walk pairs to find the last complete turn
+    i = 0
+    msgs = [m for m in recent_messages]
+    while i < len(msgs) - 1:
+        if msgs[i].role == "USER" and msgs[i+1].role == "ASSISTANT":
+            last_user_msg = msgs[i]
+            last_assistant_msg = msgs[i+1]
+            previous_query = last_user_msg.content
+            previous_answer = last_assistant_msg.content
+            cot = last_assistant_msg.chain_of_thought or {}
+            previous_sql = cot.get("sql_executed", "")
+            previous_tables_used = cot.get("tables_used", [])
+        i += 1
+
     async def generate():
         try:
             # Build the pipeline state from the Master Context spec
             initial_state = {
                 "user_query": user_query,
                 "user_id": str(current_user.id),
-                "user_persona": current_user.persona,
+                "user_persona": body.persona or current_user.persona,
                 "team_id": str(current_user.team_id) if current_user.team_id else "",
                 "allowed_team_ids": allowed_team_ids,
                 "current_date": date.today().isoformat(),
@@ -299,6 +358,10 @@ async def send_message(
                 "sql_tables_used": [],
                 "sql_retry_count": 0,
                 "sql_error": "",
+                "previous_query": previous_query,
+                "previous_answer": previous_answer,
+                "previous_sql": previous_sql,
+                "previous_tables_used": previous_tables_used,
             }
 
 
@@ -313,17 +376,17 @@ async def send_message(
             pipeline_result = await loop.run_in_executor(None, invoke_fn, initial_state)
 
             final_answer = pipeline_result.get("final_answer", "")
-            cot = pipeline_result.get("chain_of_thought", {})
+            cot = _sanitize_for_json(pipeline_result.get("chain_of_thought", {}))
 
             # Stream answer word-by-word for smooth typing effect
             words = final_answer.split(" ")
             for i, word in enumerate(words):
                 chunk = word + (" " if i < len(words) - 1 else "")
-                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+                yield f"data: {_dumps({'type': 'chunk', 'content': chunk})}\n\n"
                 await asyncio.sleep(0.02)
 
             # Send final event with full Chain of Thought
-            yield f"data: {json.dumps({'type': 'done', 'chain_of_thought': cot})}\n\n"
+            yield f"data: {_dumps({'type': 'done', 'chain_of_thought': cot})}\n\n"
 
             # Save assistant message to DB
             assistant_msg = Message(
@@ -337,7 +400,7 @@ async def send_message(
 
         except Exception as exc:
             logger.exception("Pipeline error for chatroom %s", chatroom_id)
-            yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
+            yield f"data: {_dumps({'type': 'error', 'message': str(exc)})}\n\n"
 
     return StreamingResponse(
         generate(),

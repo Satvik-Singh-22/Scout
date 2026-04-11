@@ -44,6 +44,7 @@ export interface User {
 export interface ChainOfThought {
   sources: string[]
   sql_executed: string
+  sql_results: object[]
   rag_chunks_used: number
   agent_path: string[]
   query_intent: string
@@ -51,6 +52,7 @@ export interface ChainOfThought {
   tables_searched: string[]
   tables_used: string[]
   teams_accessed: string[]
+  chart_type: 'BAR' | 'LINE' | 'PIE' | 'TABLE'
 }
 
 export interface Message {
@@ -84,6 +86,8 @@ export interface ScheduledQuery {
   cron_expression: string
   delivery: 'EMAIL' | 'DASHBOARD'
   is_active: boolean
+  alert_condition?: string | null
+  alert_severity?: string | null
   last_run_at: string | null
   next_run_at: string | null
 }
@@ -218,6 +222,7 @@ export async function getMessages(chatroomId: string): Promise<Message[]> {
 export function streamMessage(
   chatroomId: string,
   query: string,
+  persona: 'MANAGER' | 'DEVELOPER',
   onChunk: (text: string) => void,
   onDone: (cot: ChainOfThought) => void,
   onError: (err: string) => void
@@ -227,7 +232,7 @@ export function streamMessage(
   fetch(`${BASE_URL}/chatrooms/${chatroomId}/message`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, persona }),
     signal: controller.signal
   }).then(async (res) => {
     if (res.status === 401) {
@@ -302,7 +307,8 @@ export async function getScheduled(): Promise<ScheduledQuery[]> {
 
 export async function createScheduled(payload: {
   query_text: string; cron_expression: string;
-  delivery: string; delivery_email?: string
+  delivery: string; delivery_email?: string;
+  alert_condition?: string; alert_severity?: string
 }): Promise<ScheduledQuery> {
   const res = await apiFetch(`${BASE_URL}/scheduled`, {
     method: 'POST',
@@ -313,12 +319,22 @@ export async function createScheduled(payload: {
   return res.json()
 }
 
-export async function toggleScheduled(id: string, is_active: boolean) {
-  await apiFetch(`${BASE_URL}/scheduled/${id}`, {
+export async function updateScheduled(id: string, payload: {
+  query_text?: string; cron_expression?: string;
+  delivery?: string; delivery_email?: string;
+  is_active?: boolean; alert_condition?: string; alert_severity?: string
+}): Promise<ScheduledQuery> {
+  const res = await apiFetch(`${BASE_URL}/scheduled/${id}`, {
     method: 'PATCH',
     headers: authHeaders(),
-    body: JSON.stringify({ is_active })
+    body: JSON.stringify(payload)
   })
+  if (!res.ok) throw new Error('Failed to update scheduled query')
+  return res.json()
+}
+
+export async function toggleScheduled(id: string, is_active: boolean) {
+  return updateScheduled(id, { is_active })
 }
 
 export async function getScheduledHistory(id: string) {

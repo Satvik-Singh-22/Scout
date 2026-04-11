@@ -5,9 +5,10 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 
 interface Props {
   cot: CoTType | null
+  persona: 'MANAGER' | 'DEVELOPER'
 }
 
-export default function ChainOfThought({ cot }: Props) {
+export default function ChainOfThought({ cot, persona }: Props) {
   const [open, setOpen] = useState(false)
   if (!cot) return null
 
@@ -64,8 +65,8 @@ export default function ChainOfThought({ cot }: Props) {
             </div>
           )}
 
-          {/* SQL executed */}
-          {cot.sql_executed && (
+          {/* SQL executed — Hidden for Managers */}
+          {persona === 'DEVELOPER' && cot.sql_executed && (
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase">SQL executed</span>
               <pre className="mt-1 bg-gray-900 text-green-400 text-xs p-3 rounded overflow-x-auto">
@@ -84,8 +85,8 @@ export default function ChainOfThought({ cot }: Props) {
             </div>
           )}
 
-          {/* Agent path */}
-          {cot.agent_path && cot.agent_path.length > 0 && (
+          {/* Agent path — Hidden for Managers */}
+          {persona === 'DEVELOPER' && cot.agent_path && cot.agent_path.length > 0 && (
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase">Agent pipeline</span>
               <div className="mt-1 flex items-center gap-1 flex-wrap">

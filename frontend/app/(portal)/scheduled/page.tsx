@@ -13,10 +13,47 @@ function formatDate(dateStr: string | null): string {
   })
 }
 
+function describeCron(cron: string): string {
+  const parts = cron.trim().split(/\s+/)
+  if (parts.length < 5) return cron
+
+  const [minute, hour, , , dow] = parts
+
+  const formatTime = (h: string, m: string): string => {
+    const hh = parseInt(h)
+    const mm = parseInt(m)
+    if (isNaN(hh)) return ''
+    const ampm = hh >= 12 ? 'PM' : 'AM'
+    const displayH = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh
+    return `${displayH}:${mm.toString().padStart(2, '0')} ${ampm}`
+  }
+
+  if (minute === '*' && hour === '*') return 'Every minute'
+  if (hour === '*' && minute !== '*') return `Hourly at :${minute.padStart(2, '0')}`
+  if (hour.startsWith('*/')) {
+    const interval = hour.replace('*/', '')
+    return `Every ${interval} hours at :${minute.padStart(2, '0')}`
+  }
+
+  const dayNames: Record<string, string> = {
+    '0': 'Sun', '1': 'Mon', '2': 'Tue', '3': 'Wed',
+    '4': 'Thu', '5': 'Fri', '6': 'Sat', '7': 'Sun'
+  }
+
+  if (dow !== '*' && hour !== '*') {
+    return `Weekly on ${dayNames[dow] || dow} at ${formatTime(hour, minute)}`
+  }
+  if (dow === '*' && hour !== '*') {
+    return `Daily at ${formatTime(hour, minute)}`
+  }
+  return cron
+}
+
 export default function ScheduledPage() {
   const [queries, setQueries] = useState<ScheduledQuery[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingQuery, setEditingQuery] = useState<ScheduledQuery | null>(null)
   const [error, setError] = useState('')
 
   const loadQueries = () => {
@@ -30,19 +67,35 @@ export default function ScheduledPage() {
 
   const handleToggle = async (q: ScheduledQuery) => {
     const nextState = !q.is_active
-    // Optimistic update
     setQueries(prev => prev.map(x => x.id === q.id ? { ...x, is_active: nextState } : x))
     try {
       await toggleScheduled(q.id, nextState)
     } catch {
-      // Revert on failure
       setQueries(prev => prev.map(x => x.id === q.id ? { ...x, is_active: q.is_active } : x))
     }
   }
 
   const handleCreated = () => {
     setShowForm(false)
+    setEditingQuery(null)
     loadQueries()
+  }
+
+  const handleCancel = () => {
+    setShowForm(false)
+    setEditingQuery(null)
+  }
+
+  const handleEdit = (q: ScheduledQuery) => {
+    setEditingQuery(q)
+    setShowForm(true)
+    // Scroll to top to show the form
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleNewSchedule = () => {
+    setEditingQuery(null)
+    setShowForm(prev => !prev)
   }
 
   if (loading) return (
@@ -66,27 +119,26 @@ export default function ScheduledPage() {
             <p className="text-sm text-gray-500">Automated reports and notifications</p>
           </div>
         </div>
-        {/* FIX: Button now toggles the create form */}
         <button
-          onClick={() => setShowForm(prev => !prev)}
+          onClick={handleNewSchedule}
           className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all active:scale-95"
         >
-          <span className="material-symbols-outlined text-sm">{showForm ? 'close' : 'add'}</span>
-          {showForm ? 'Cancel' : 'New Schedule'}
+          <span className="material-symbols-outlined text-sm">{showForm && !editingQuery ? 'close' : 'add'}</span>
+          {showForm && !editingQuery ? 'Cancel' : 'New Schedule'}
         </button>
       </div>
 
-      {/* Error banner */}
       {error && (
         <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
       )}
 
-      {/* Create form */}
+      {/* Create / Edit form */}
       {showForm && (
         <div className="mb-8">
           <ScheduledQueryForm
             onCreated={handleCreated}
-            onCancel={() => setShowForm(false)}
+            onCancel={handleCancel}
+            editQuery={editingQuery}
           />
         </div>
       )}
@@ -98,7 +150,7 @@ export default function ScheduledPage() {
           <p className="font-semibold text-gray-500 mb-1">No scheduled queries yet</p>
           <p className="text-sm mb-6">Set up recurring reports delivered to your dashboard or email</p>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => { setEditingQuery(null); setShowForm(true) }}
             className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all"
           >
             Create Your First Schedule
@@ -115,9 +167,10 @@ export default function ScheduledPage() {
                 <th className="px-6 py-4">Query / Prompt</th>
                 <th className="px-6 py-4">Schedule</th>
                 <th className="px-6 py-4">Delivery</th>
+                <th className="px-6 py-4">Alert</th>
                 <th className="px-6 py-4">Last Run</th>
                 <th className="px-6 py-4">Active</th>
-                <th className="px-6 py-4 text-right">History</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -129,7 +182,9 @@ export default function ScheduledPage() {
                       <p className="text-xs text-gray-400 mt-0.5">Next: {formatDate(q.next_run_at)}</p>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-mono text-xs">{q.cron_expression}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)}</span>
+                  </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                       q.delivery === 'EMAIL'
@@ -139,9 +194,24 @@ export default function ScheduledPage() {
                       {q.delivery}
                     </span>
                   </td>
+                  <td className="px-6 py-4">
+                    {q.alert_condition ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${
+                          q.alert_severity === 'HIGH' ? 'bg-red-500'
+                          : q.alert_severity === 'LOW' ? 'bg-green-500'
+                          : 'bg-amber-500'
+                        }`} />
+                        <span className="text-xs text-gray-600 max-w-[140px] truncate" title={q.alert_condition}>
+                          {q.alert_condition}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-300">—</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(q.last_run_at)}</td>
                   <td className="px-6 py-4">
-                    {/* Toggle switch */}
                     <button
                       onClick={() => handleToggle(q)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${
@@ -155,13 +225,23 @@ export default function ScheduledPage() {
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link
-                      href={`/scheduled/${q.id}/history`}
-                      className="text-indigo-600 hover:text-indigo-900 font-medium text-xs inline-flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-sm">history</span>
-                      View
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(q)}
+                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 font-medium text-xs px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors"
+                        title="Edit this schedule"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        Edit
+                      </button>
+                      <Link
+                        href={`/scheduled/${q.id}/history`}
+                        className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 font-medium text-xs px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">history</span>
+                        History
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

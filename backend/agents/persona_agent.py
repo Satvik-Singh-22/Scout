@@ -42,24 +42,62 @@ Tables referenced: {tables_referenced}
 Write a detailed technical answer:""")
 ])
 
+
+def infer_chart_type(sql_results: list, query_intent: str) -> str:
+    """
+    Heuristic: pick the best chart type from the shape of the result rows.
+    Falls back to TABLE when data is absent or intent doesn't produce SQL.
+    """
+    if not sql_results or query_intent in ("RAG_ONLY", "GENERAL", "SCHEMA_LOOKUP"):
+        return "TABLE"
+
+    row = sql_results[0]
+    keys = list(row.keys())
+
+    str_cols = [k for k in keys if isinstance(row[k], str)]
+    num_cols = [k for k in keys if isinstance(row[k], (int, float))]
+
+    if not str_cols or not num_cols:
+        return "TABLE"
+
+    # Time-series pattern: date/week/month/day column → LINE chart
+    time_keywords = {"date", "week", "month", "day", "timestamp", "period", "hour", "year"}
+    if any(k.lower() in time_keywords or any(kw in k.lower() for kw in time_keywords) for k in str_cols):
+        return "LINE"
+
+    # Small category breakdown (≤ 6 rows) → PIE
+    if len(sql_results) <= 6:
+        return "PIE"
+
+    # Larger category breakdown → BAR
+    return "BAR"
+
+
 def build_chain_of_thought(state: PipelineState) -> dict:
+    sql = state.get("generated_sql", "")
+    sql_results = state.get("sql_results", [])
+    query_intent = state.get("query_intent", "")
+
     return {
         "sources": state.get("relevant_tables", []),
-        "sql_executed": state.get("generated_sql", "") if not state.get("generated_sql", "").startswith("BLOCKED") else "",
+        "sql_executed": sql if not sql.startswith("BLOCKED") else "",
+        "sql_results": sql_results[:50],   # cap at 50 rows — enough for charts, not too heavy
         "rag_chunks_used": len(state.get("rag_chunks", [])),
         "agent_path": ["orchestrator", "relevancy", "sql_gen", "rag", "execution", "synthesis", "persona"],
-        "query_intent": state.get("query_intent", ""),
-        "confidence": "high" if state.get("sql_results") or state.get("rag_chunks") else "low",
+        "query_intent": query_intent,
+        "confidence": "high" if sql_results or state.get("rag_chunks") else "low",
         "tables_searched": state.get("relevant_tables", []),
         "tables_used": state.get("sql_tables_used", []),
         "teams_accessed": state.get("allowed_team_ids", []),
+        "chart_type": infer_chart_type(sql_results, query_intent),
     }
+
 
 def persona_agent(state: PipelineState) -> dict:
     persona = state.get("user_persona", "MANAGER").upper()
-    
+
     llm = get_llm(temperature=0.7)
-    
+
     if persona == "DEVELOPER":
         chain = DEVELOPER_PROMPT | llm
         result = chain.invoke({
@@ -76,5 +114,5 @@ def persona_agent(state: PipelineState) -> dict:
         })
 
     cot = build_chain_of_thought(state)
-    
+    print("[DEBUG] PERSONA AGENT")
     return {"final_answer": result.content, "chain_of_thought": cot}

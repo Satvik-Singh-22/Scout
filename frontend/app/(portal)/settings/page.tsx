@@ -77,6 +77,33 @@ export default function SettingsPage() {
             />
           </div>
 
+          {/* Team info */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Team</label>
+            {user.accessible_teams && user.accessible_teams.length > 0 ? (
+              <div className="space-y-2">
+                {user.accessible_teams.map(team => (
+                  <div
+                    key={team.team_id}
+                    className={`inline-flex items-center gap-2 mr-2 px-3 py-2 rounded-lg border text-sm ${
+                      team.team_id === user.team_id
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-medium'
+                        : 'bg-gray-50 border-gray-200 text-gray-600'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">groups</span>
+                    {team.team_name}
+                    {team.team_id === user.team_id && (
+                      <span className="text-[10px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded uppercase tracking-wide">Primary</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No team assigned</p>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Select Persona</label>
             <div className="grid grid-cols-2 gap-4">

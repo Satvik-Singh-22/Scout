@@ -15,9 +15,17 @@ RELEVANCY_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a data architect for a banking system.
 Given a user's question and a list of available tables with their descriptions,
 identify which tables are needed to answer the question.
+Select ONLY the tables genuinely needed to answer the question. 
+Err on the side of fewer tables — 1-2 is usually correct.
+Do NOT select a table just because it sounds related.
+
+Examples:
+- "transaction failure rate" → mock_transactions only (not mock_payment_events)
+- "API error spike" → mock_api_gateway_logs only
+- "customer complaints about payments" → mock_customer_feedback + mock_transactions
 
 Return ONLY a JSON object: {{"tables": ["table1", "table2"], "reasoning": "one sentence"}}
-Only include tables that are genuinely needed. Maximum 5 tables.
+Max 3 tables unless the question genuinely requires more.
 Available tables:
 {available_tables}
 """),
@@ -50,12 +58,21 @@ def relevancy_agent(state: PipelineState) -> dict:
     if not available_tables_str.strip():
         return {"relevant_tables": []}
 
+    # Build a previous-tables hint — strong prior for follow-up questions
+    previous_hint = ""
+    if state.get("previous_tables_used"):
+        previous_hint = (
+            f"\nNote: The previous question used these tables: "
+            f"{', '.join(state['previous_tables_used'])}. "
+            f"Prefer these if the current question is a follow-up."
+        )
+
     llm = get_llm(temperature=0, json_mode=True)
     parser = JsonOutputParser(pydantic_object=RelevancyOutput)
     chain = RELEVANCY_PROMPT | llm | parser
     print("[DEBUG] RELEVANCY AGENT")
     result = chain.invoke({
-        "available_tables": available_tables_str,
+        "available_tables": available_tables_str + previous_hint,
         "user_query": state["user_query"]
     })
     
