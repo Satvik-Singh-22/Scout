@@ -3,30 +3,6 @@ import { useState, useEffect } from 'react'
 import { getAlerts, markAlertRead } from '@/lib/api-client'
 import type { Alert } from '@/lib/api-client'
 
-const severityConfig = {
-  HIGH: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    badge: 'bg-red-100 text-red-700',
-    dot: 'bg-red-500',
-    icon: '🔴',
-  },
-  MEDIUM: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    badge: 'bg-orange-100 text-orange-700',
-    dot: 'bg-orange-500',
-    icon: '🟡',
-  },
-  LOW: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    badge: 'bg-blue-100 text-blue-700',
-    dot: 'bg-blue-500',
-    icon: '🔵',
-  },
-}
-
 export default function AlertCenter() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,10 +10,7 @@ export default function AlertCenter() {
 
   useEffect(() => {
     getAlerts()
-      .then(data => {
-        setAlerts(data)
-        setLoading(false)
-      })
+      .then(data => { setAlerts(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
@@ -72,31 +45,36 @@ export default function AlertCenter() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-            <span className="material-symbols-outlined text-indigo-600">notifications_active</span>
+    <div className="max-w-5xl mx-auto">
+      {/* ── Page Header ── */}
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Alert Center
+            </h1>
+            <span className={`px-2.5 py-0.5 text-sm font-bold rounded-full ${
+              unreadCount > 0
+                ? 'bg-red-100 text-red-700'
+                : 'bg-green-100 text-green-700'
+            }`}>
+              {unreadCount > 0 ? `${unreadCount} Unread` : 'All caught up'}
+            </span>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Alert Center</h1>
-            <p className="text-sm text-gray-500">
-              {unreadCount > 0 ? `${unreadCount} unread alert${unreadCount !== 1 ? 's' : ''}` : 'All caught up'}
-            </p>
-          </div>
+          <p className="text-gray-500">Monitor system health and business anomalies across all data sources.</p>
         </div>
-        {unreadCount > 0 && (
+        <div className="flex gap-2">
           <button
             onClick={handleMarkAllRead}
-            className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-100"
+            disabled={unreadCount === 0}
+            className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Mark all read
+            Mark all as read
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Severity filter chips */}
+      {/* ── Filter chips ── */}
       <div className="flex items-center gap-2 mb-6">
         {(['ALL', 'HIGH', 'MEDIUM', 'LOW'] as const).map(level => {
           const count = level === 'ALL' ? alerts.length : alerts.filter(a => a.severity === level).length
@@ -104,14 +82,14 @@ export default function AlertCenter() {
             <button
               key={level}
               onClick={() => setFilter(level)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 filter === level
                   ? 'bg-gray-900 text-white shadow-sm'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
               }`}
             >
               {level === 'ALL' ? 'All' : level.charAt(0) + level.slice(1).toLowerCase()}
-              <span className={`ml-1.5 ${filter === level ? 'text-gray-300' : 'text-gray-400'}`}>
+              <span className={`ml-1.5 ${filter === level ? 'text-gray-400' : 'text-gray-400'}`}>
                 {count}
               </span>
             </button>
@@ -119,72 +97,114 @@ export default function AlertCenter() {
         })}
       </div>
 
-      {/* Alert cards */}
+      {/* ── Alert cards ── */}
       {filteredAlerts.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-16 text-center shadow-sm">
           <div className="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-gray-300 text-3xl">notifications_off</span>
           </div>
-          <p className="text-gray-500 font-medium">No alerts to display</p>
+          <p className="text-gray-500 font-semibold text-lg">No alerts to display</p>
           <p className="text-sm text-gray-400 mt-1">Check back later for new notifications</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4">
           {filteredAlerts.map(alert => {
-            const config = severityConfig[alert.severity]
             const timeAgo = getTimeAgo(alert.created_at)
+            const isRead = alert.is_read
+
+            // Severity-specific styles — colors persist even when read
+            const sev = alert.severity
+
+            const cardBg = sev === 'HIGH' ? 'bg-[#fff5f5]'
+              : sev === 'MEDIUM' ? 'bg-[#fffbeb]'
+              : 'bg-white'
+
+            const stripColor = sev === 'HIGH' ? 'bg-red-500'
+              : sev === 'MEDIUM' ? 'bg-amber-500'
+              : ''
+
+            const iconColor = sev === 'HIGH' ? 'text-red-500'
+              : sev === 'MEDIUM' ? 'text-amber-600'
+              : 'text-indigo-500'
+
+            const ringColor = sev === 'HIGH' ? 'ring-red-500/10'
+              : sev === 'MEDIUM' ? 'ring-amber-500/10'
+              : 'ring-gray-200/60'
+
+            const badgeColor = sev === 'HIGH' ? 'text-red-600'
+              : sev === 'MEDIUM' ? 'text-amber-600'
+              : 'text-gray-500'
+
+            const iconName = sev === 'HIGH' ? 'trending_down'
+              : sev === 'MEDIUM' ? 'sync_problem'
+              : 'info'
+
             return (
               <div
                 key={alert.id}
-                className={`group bg-white border rounded-xl p-5 shadow-sm transition-all hover:shadow-md ${
-                  alert.is_read ? 'border-gray-100 opacity-70' : `border-l-4 ${config.border}`
+                className={`group relative rounded-xl p-5 flex items-start gap-5 transition-all ring-1 overflow-hidden ${cardBg} ${ringColor} hover:shadow-lg ${
+                  isRead ? 'opacity-80 hover:opacity-100' : ''
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4 flex-1 min-w-0">
-                    {/* Severity indicator */}
-                    <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${config.bg}`}>
-                      <span className={`w-2.5 h-2.5 rounded-full ${config.dot}`} />
+                {/* Left color strip — always visible */}
+                {stripColor && (
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${stripColor}`} />
+                )}
+
+                {/* Circular Icon */}
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-sm bg-white ${iconColor}`}>
+                  <span className="material-symbols-outlined">{iconName}</span>
+                </div>
+
+                {/* Content */}
+                <div className="flex-grow min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className={`text-lg font-bold ${isRead ? 'text-gray-500' : 'text-gray-900'}`}>
+                      {alert.title}
+                    </h3>
+                    <span className={`text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${badgeColor}`}>
+                      {sev === 'HIGH' ? 'High Severity' : sev === 'MEDIUM' ? 'Medium' : 'Low'}
+                    </span>
+                  </div>
+
+                  <p className={`text-sm mb-4 max-w-2xl leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {alert.description}
+                  </p>
+
+                  {/* Data snapshot */}
+                  {alert.data_snapshot && !isRead && (
+                    <div className="mb-4 bg-white/70 border border-gray-200/60 rounded-lg p-3">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Data Snapshot</span>
+                      <pre className="mt-1 text-xs text-gray-600 font-mono overflow-x-auto">
+                        {JSON.stringify(alert.data_snapshot, null, 2)}
+                      </pre>
                     </div>
+                  )}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`text-sm font-semibold ${alert.is_read ? 'text-gray-500' : 'text-gray-900'}`}>
-                          {alert.title}
-                        </h3>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${config.badge}`}>
-                          {alert.severity}
-                        </span>
-                        {!alert.is_read && (
-                          <span className="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0" />
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">{alert.description}</p>
-
-                      {/* Data snapshot */}
-                      {alert.data_snapshot && (
-                        <div className="mt-3 bg-gray-50 border border-gray-100 rounded-lg p-3">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Data Snapshot</span>
-                          <pre className="mt-1 text-xs text-gray-600 font-mono overflow-x-auto">
-                            {JSON.stringify(alert.data_snapshot, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex items-center gap-4 mt-3">
-                        <span className="text-xs text-gray-400">{timeAgo}</span>
-                        {!alert.is_read && (
-                          <button
-                            onClick={() => handleMarkRead(alert.id)}
-                            className="text-xs text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
-                          >
-                            Mark as read
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                  {/* Footer */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">schedule</span>
+                      {timeAgo}
+                    </span>
+                    {!isRead ? (
+                      <>
+                        <button
+                          onClick={() => handleMarkRead(alert.id)}
+                          className="text-xs font-bold text-indigo-600 hover:underline transition-all"
+                        >
+                          Mark as Read
+                        </button>
+                        <button className="text-xs font-bold text-gray-500 hover:text-gray-700 transition-all">
+                          View Report
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400 flex items-center gap-1 italic">
+                        <span className="material-symbols-outlined text-sm">done_all</span>
+                        Read
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

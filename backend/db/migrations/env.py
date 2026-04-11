@@ -30,6 +30,8 @@ database_url = os.getenv("DATABASE_URL", "")
 if database_url:
     # Alembic requires a sync driver — convert asyncpg to psycopg2
     sync_url = database_url.replace("+asyncpg", "+psycopg2")
+    # psycopg2 uses sslmode=require, not ssl=require
+    sync_url = sync_url.replace("ssl=require", "sslmode=require")
     config.set_main_option("sqlalchemy.url", sync_url)
 
 # Interpret the config file for Python logging

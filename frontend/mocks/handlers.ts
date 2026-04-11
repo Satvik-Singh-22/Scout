@@ -206,6 +206,8 @@ export const handlers = [
         cron_expression: '0 8 * * *',
         delivery: 'EMAIL',
         is_active: true,
+        alert_condition: 'Alert me if the failure rate exceeds 5%',
+        alert_severity: 'HIGH',
         last_run_at: new Date(Date.now() - 86400000).toISOString(),
         next_run_at: new Date(Date.now() + 43200000).toISOString()
       },
@@ -215,6 +217,8 @@ export const handlers = [
         cron_expression: '0 9 * * 1',
         delivery: 'DASHBOARD',
         is_active: false,
+        alert_condition: null,
+        alert_severity: null,
         last_run_at: null,
         next_run_at: null
       }
