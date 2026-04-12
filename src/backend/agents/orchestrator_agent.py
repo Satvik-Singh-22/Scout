@@ -1,3 +1,17 @@
+# Copyright 2026 The SCOUT Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 ELI5 (What does this file do?):
 Think of this as the intelligent sorting hat or the head dispatcher. 
@@ -24,26 +38,27 @@ Classify the user's question into exactly one of 5 intents.
 
 Available data types:
 1. STRUCTURED (SQL): Transaction records, payment events, API logs, system metrics, financial data.
-2. UNSTRUCTURED (RAG): Customer reviews, complaint text, support ticket descriptions.
-3. SCHEMA: Table names, column names, what data is available, what a table contains.
-4. GENERAL: Greetings, explanations, definitions, questions about how the system works, anything not about data.
+2. SCHEMA: Table names, column names, what data is available, what a table contains.
+3. GENERAL: Greetings, explanations, definitions, questions about how the system works, anything not about data.
 
 Intent rules — pick the FIRST one that matches:
 - GENERAL: question is a greeting, a definition request, a "how does X work" question, or has nothing to do with banking data. No data access needed at all.
 - SCHEMA_LOOKUP: user asks what tables exist, what columns a table has, what data is available, "do you have data about X", "what can you tell me about Y table". Needs table awareness but NO query execution. If a question asks BOTH about schema AND about actual data values, classify as SQL_ONLY.
 - SQL_ONLY: needs exact numbers, aggregations, comparisons, trends, time-series from structured tables.
-- RAG_ONLY: asks what customers said, sentiment, complaint themes, free text.
-- HYBRID: needs both numerical data AND customer text together.
 
 Prior conversation context:
 {previous_query_block}
 If the current question is a follow-up (uses "same", "that", "those", "also", "instead", "now show"), 
 resolve what it refers to using the prior context before classifying.
 
-Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|RAG_ONLY|HYBRID|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
+Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
 """),
     ("human", "User question: {user_query}")
 ])
+
+# 2. UNSTRUCTURED (RAG): Customer reviews, complaint text, support ticket descriptions.
+# - RAG_ONLY: asks what customers said, sentiment, complaint themes, free text.
+# - HYBRID: needs both numerical data AND customer text together.
 
 def orchestrator_agent(state: PipelineState) -> dict:
     previous_query = state.get("previous_query", "")

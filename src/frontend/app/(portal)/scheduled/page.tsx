@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 The SCOUT Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use client'
 import { useEffect, useState } from 'react'
 import { getScheduled, toggleScheduled, deleteScheduled } from '@/lib/api-client'
@@ -173,32 +189,32 @@ export default function ScheduledPage() {
       {/* Table */}
       {queries.length > 0 && (
         <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 font-semibold text-gray-500 border-b border-gray-200">
+          <table className="w-full text-sm text-left table-fixed">
+            <thead className="bg-gray-50 font-semibold text-gray-500 border-b border-gray-200 text-xs">
               <tr>
-                <th className="px-6 py-4">Query / Prompt</th>
-                <th className="px-6 py-4">Schedule</th>
-                <th className="px-6 py-4">Delivery</th>
-                <th className="px-6 py-4">Alert</th>
-                <th className="px-6 py-4">Last Run</th>
-                <th className="px-6 py-4">Active</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-3 py-3 w-[25%]">Query / Prompt</th>
+                <th className="px-3 py-3 w-[14%]">Schedule</th>
+                <th className="px-3 py-3 w-[8%]">Delivery</th>
+                <th className="px-3 py-3 w-[15%]">Alert</th>
+                <th className="px-3 py-3 w-[10%]">Last Run</th>
+                <th className="px-3 py-3 w-[8%]">Active</th>
+                <th className="px-3 py-3 w-[20%] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {queries.map(q => (
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 max-w-xs">
-                    <p className="font-medium text-gray-900 truncate">{q.query_text}</p>
+                  <td className="px-3 py-3">
+                    <p className="font-medium text-gray-900 truncate text-xs">{q.query_text}</p>
                     {q.next_run_at && (
-                      <p className="text-xs text-gray-400 mt-0.5">Next: {formatDate(q.next_run_at)}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Next: {formatDate(q.next_run_at)}</p>
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3">
                     <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  <td className="px-3 py-3">
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                       q.delivery === 'EMAIL'
                         ? 'bg-blue-50 text-blue-700'
                         : 'bg-indigo-50 text-indigo-700'
@@ -206,15 +222,15 @@ export default function ScheduledPage() {
                       {q.delivery}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3">
                     {q.alert_condition ? (
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${
+                      <div className="flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                           q.alert_severity === 'HIGH' ? 'bg-red-500'
                           : q.alert_severity === 'LOW' ? 'bg-green-500'
                           : 'bg-amber-500'
                         }`} />
-                        <span className="text-xs text-gray-600 max-w-[140px] truncate" title={q.alert_condition}>
+                        <span className="text-[11px] text-gray-600 truncate" title={q.alert_condition}>
                           {q.alert_condition}
                         </span>
                       </div>
@@ -222,8 +238,8 @@ export default function ScheduledPage() {
                       <span className="text-xs text-gray-300">—</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(q.last_run_at)}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 text-gray-500 text-xs">{formatDate(q.last_run_at)}</td>
+                  <td className="px-3 py-3">
                     <button
                       onClick={() => handleToggle(q)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${
@@ -236,29 +252,29 @@ export default function ScheduledPage() {
                       }`} />
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-3 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => handleEdit(q)}
-                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 font-medium text-xs px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors"
-                        title="Edit this schedule"
+                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 font-medium text-xs px-1.5 py-1 rounded-md hover:bg-indigo-50 transition-colors"
+                        title="Edit"
                       >
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
                         Edit
                       </button>
                       <Link
                         href={`/scheduled/${q.id}/history`}
-                        className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 font-medium text-xs px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+                        className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 font-medium text-xs px-1.5 py-1 rounded-md hover:bg-gray-100 transition-colors"
                       >
-                        <span className="material-symbols-outlined text-sm">history</span>
+                        <span className="material-symbols-outlined text-[16px]">history</span>
                         History
                       </Link>
                       <button
                         onClick={() => handleDelete(q)}
-                        className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 font-medium text-xs px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
-                        title="Delete this schedule"
+                        className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 font-medium text-xs px-1.5 py-1 rounded-md hover:bg-red-50 transition-colors"
+                        title="Delete"
                       >
-                        <span className="material-symbols-outlined text-sm">delete</span>
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
                         Delete
                       </button>
                     </div>
