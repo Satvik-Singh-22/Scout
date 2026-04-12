@@ -87,6 +87,7 @@ def get_llm(temperature=0, json_mode=False):
                     temperature=temperature,
                     api_key=key,
                     model_kwargs=model_kwargs,
+                    max_retries=0,
                 )
                 try:
                     return llm.invoke(input_val, config=config)
@@ -111,6 +112,7 @@ def get_llm(temperature=0, json_mode=False):
                     temperature=temperature,
                     api_key=key,
                     model_kwargs=model_kwargs,
+                    max_retries=0,
                 )
                 try:
                     return await llm.ainvoke(input_val, config=config)
