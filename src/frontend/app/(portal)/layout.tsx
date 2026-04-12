@@ -67,12 +67,6 @@ export default function PortalLayout({
 
   const navItems = [
     ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/chat', label: 'Chat', icon: 'chat' }]
-      : []),
-    ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' }]
-      : []),
-    ...(user?.role !== 'PLATFORM_ADMIN'
       ? [
           {
             href: '/alerts',
@@ -98,12 +92,6 @@ export default function PortalLayout({
   ];
 
   const topNavLinks = [
-    ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/chat', label: 'Chat' }]
-      : []),
-    ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/dashboard', label: 'Dashboard' }]
-      : []),
     ...(user?.role === 'PLATFORM_ADMIN'
       ? [{ href: '/admin', label: 'Admin' }]
       : []),
@@ -157,21 +145,25 @@ export default function PortalLayout({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
-            <Link
-              href="/alerts"
-              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all relative"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
-            </Link>
-            <Link
-              href="/chat"
-              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
-            >
-              <span className="material-symbols-outlined">chat_bubble</span>
-            </Link>
+            {user?.role !== 'PLATFORM_ADMIN' && (
+              <>
+                <Link
+                  href="/alerts"
+                  className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all relative"
+                >
+                  <span className="material-symbols-outlined">notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </Link>
+                <Link
+                  href="/chat"
+                  className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
+                >
+                  <span className="material-symbols-outlined">chat_bubble</span>
+                </Link>
+              </>
+            )}
             <Link
               href="/profile"
               className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"

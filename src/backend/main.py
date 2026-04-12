@@ -102,6 +102,9 @@ def health():
 @app.get("/health/llm", tags=["System"])
 def health_llm():
     """LLM key pool status — shows available/cooling-down keys and usage stats."""
-    from backend.agents.llm import get_rotator
-    return get_rotator().health()
+    from backend.agents.llm import _pool
+    return {
+        "total_keys": len(_pool.keys),
+        "current_index": _pool._index,
+    }
 
