@@ -256,7 +256,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {(frequency === 'daily' || frequency === 'weekly') && (
             <div>
               <label htmlFor="sq-time" className="block text-xs font-medium text-gray-500 mb-1">
-                At what time?
+                At what time? (UTC)
               </label>
               <input
                 id="sq-time"
@@ -272,7 +272,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {(frequency === 'hourly' || frequency === 'every6h') && (
             <div>
               <label htmlFor="sq-minute" className="block text-xs font-medium text-gray-500 mb-1">
-                At what minute past the hour?
+                At what minute past the hour? (UTC)
               </label>
               <input
                 id="sq-minute"
@@ -289,7 +289,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {/* Schedule summary */}
           <div className="mt-3 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg">
             <span className="material-symbols-outlined text-sm">schedule</span>
-            <span className="font-medium">{getScheduleSummary()}</span>
+            <span className="font-medium">{getScheduleSummary()} (UTC)</span>
           </div>
         </div>
 
