@@ -26,6 +26,7 @@ from backend.db.models import (
 from backend.db.session import SyncSessionLocal
 from backend.agents.anomaly_reasoner_agent import anomaly_reasoner_agent
 from backend.agents.anomaly_checker_agent import anomaly_checker_agent
+from backend.services.notification_service import send_report_email, send_alert_email
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +146,9 @@ async def run_due_scheduled_queries():
         for sq in due_queries:
             if not sq.is_active:
                 continue
+
+            print(f"\n[SCHEDULER] 🔔 Picking up scheduled query: '{sq.query_text[:100]}...' (ID: {sq.id})")
+
             try:
                 # Look up user from batch cache
                 user = users_by_id.get(sq.user_id)
@@ -201,6 +205,7 @@ async def run_due_scheduled_queries():
                             chart_type="TABLE",
                         )
                         session.add(card)
+                        print(f"[SCHEDULER] 📊 Uploaded result to Dashboard for User: {user.email}")
 
                     elif sq.delivery == "EMAIL" and sq.delivery_email:
                         try:
@@ -212,6 +217,7 @@ async def run_due_scheduled_queries():
                                 answer=answer,
                                 executed_at=now.isoformat(),
                             )
+                            print(f"[SCHEDULER] 📧 Sent report email to: {sq.delivery_email}")
                         except Exception as email_exc:
                             logger.error("Email delivery failed for query %s: %s", sq.id, email_exc)
 
@@ -248,6 +254,16 @@ async def run_due_scheduled_queries():
                                 "Alert CREATED for scheduled query %s (severity=%s)",
                                 sq.id, alert_severity
                             )
+                            # Send Alert Email
+                            alert_recipient = sq.delivery_email or user.email
+                            if alert_recipient:
+                                send_alert_email(
+                                    to_email=alert_recipient,
+                                    alert_title=f"Scheduled alert: {sq.query_text[:80]}",
+                                    alert_description=reason,
+                                    severity=alert_severity
+                                )
+                                print(f"[SCHEDULER] ⚠️ Sent Legacy Alert email to: {alert_recipient}")
                         else:
                             logger.info(
                                 "Alert NOT triggered for query %s: %s",
@@ -296,6 +312,16 @@ async def run_due_scheduled_queries():
                                 )
                                 session.add(alert)
                                 logger.info("Inline anomaly ALERT created: %s", alert_data["title"])
+
+                                # Send Anomaly Email
+                                if user.email:
+                                    send_alert_email(
+                                        to_email=user.email,
+                                        alert_title=alert_data["title"],
+                                        alert_description=alert_data["description"],
+                                        severity=alert_data["severity"]
+                                    )
+                                    print(f"[SCHEDULER] ⚠️ Sent Inline Anomaly email to: {user.email}")
 
                 # Update last_run_at
                 sq.last_run_at = now
