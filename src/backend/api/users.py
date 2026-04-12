@@ -45,8 +45,9 @@ class UserProfileResponse(BaseModel):
 class UpdateUserRequest(BaseModel):
     """Request body for updating user profile."""
 
-    persona: str | None = Field(None, pattern="^(MANAGER|DEVELOPER)$")
+    persona: str | None = Field(None, pattern="^(EXECUTIVE|TECHNICAL)$")
     name: str | None = Field(None, min_length=1, max_length=255)
+    team_id: str | None = None
 
 
 class UpdateUserResponse(BaseModel):
@@ -56,6 +57,7 @@ class UpdateUserResponse(BaseModel):
     email: str
     name: str
     persona: str
+    team_id: str | None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -105,17 +107,31 @@ async def update_me(
 ):
     """
     Update the authenticated user's persona or name.
-    Persona switch (MANAGER ↔ DEVELOPER) changes how the AI formats responses.
+    Persona switch (EXECUTIVE ↔ TECHNICAL) changes how the AI formats responses.
     """
     if body.persona is not None:
         current_user.persona = body.persona
     if body.name is not None:
         current_user.name = body.name
+    if body.team_id is not None:
+        # Validate that the user has access to this team
+        access_check = await db.execute(
+            select(UserTeamAccess).where(
+                UserTeamAccess.user_id == current_user.id,
+                UserTeamAccess.team_id == body.team_id
+            )
+        )
+        if not access_check.scalar():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You do not have access to the requested team"
+            )
+        current_user.team_id = body.team_id
 
-    if body.persona is None and body.name is None:
+    if body.persona is None and body.name is None and body.team_id is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At least one field (persona or name) must be provided",
+            detail="At least one field (persona, name, or team_id) must be provided",
         )
 
     await db.commit()
@@ -126,6 +142,7 @@ async def update_me(
         email=current_user.email,
         name=current_user.name,
         persona=current_user.persona,
+        team_id=str(current_user.team_id) if current_user.team_id else None,
     )
 
 

@@ -48,7 +48,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Minimum 8 characters")
     name: str = Field(..., min_length=1, max_length=255)
-    persona: str = Field(..., pattern="^(MANAGER|DEVELOPER)$")
+    persona: str = Field(..., pattern="^(EXECUTIVE|TECHNICAL)$")
     role: str = Field(
         default="ANALYST",
         pattern="^(DATA_OWNER|ANALYST|ENTERPRISE_ANALYST)$",

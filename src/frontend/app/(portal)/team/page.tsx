@@ -18,24 +18,24 @@ function timeAgo(dateStr: string): string {
 }
 
 const ROLE_BADGES: Record<string, { bg: string; text: string; label: string }> =
-  {
-    DATA_OWNER: {
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-      label: 'Data Owner',
-    },
-    ANALYST: { bg: 'bg-indigo-50', text: 'text-indigo-700', label: 'Analyst' },
-    ENTERPRISE_ANALYST: {
-      bg: 'bg-purple-50',
-      text: 'text-purple-700',
-      label: 'Enterprise',
-    },
-    PLATFORM_ADMIN: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Admin' },
-  };
+{
+  DATA_OWNER: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    label: 'Data Owner',
+  },
+  ANALYST: { bg: 'bg-indigo-50', text: 'text-indigo-700', label: 'Analyst' },
+  ENTERPRISE_ANALYST: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    label: 'Enterprise',
+  },
+  PLATFORM_ADMIN: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Admin' },
+};
 
 const PERSONA_ICONS: Record<string, { icon: string; color: string }> = {
-  MANAGER: { icon: 'business_center', color: 'text-violet-500' },
-  DEVELOPER: { icon: 'terminal', color: 'text-emerald-500' },
+  EXECUTIVE: { icon: 'business_center', color: 'text-violet-500' },
+  TECHNICAL: { icon: 'terminal', color: 'text-emerald-500' },
 };
 
 const AVATAR_COLORS = [
@@ -128,11 +128,11 @@ export default function TeamPage() {
   if (!user || !team) return null;
 
   // Stat calculations
-  const managerCount = team.members.filter(
-    (m) => m.persona === 'MANAGER',
+  const EXECUTIVECount = team.members.filter(
+    (m) => m.persona === 'EXECUTIVE',
   ).length;
-  const developerCount = team.members.filter(
-    (m) => m.persona === 'DEVELOPER',
+  const TECHNICALCount = team.members.filter(
+    (m) => m.persona === 'TECHNICAL',
   ).length;
   const roleDistribution = team.members.reduce(
     (acc, m) => {
@@ -182,24 +182,24 @@ export default function TeamPage() {
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Managers
+            EXECUTIVEs
           </p>
           <p
             className="text-2xl font-extrabold text-violet-600"
             style={{ fontFamily: 'Manrope, sans-serif' }}
           >
-            {managerCount}
+            {EXECUTIVECount}
           </p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Developers
+            TECHNICALs
           </p>
           <p
             className="text-2xl font-extrabold text-emerald-600"
             style={{ fontFamily: 'Manrope, sans-serif' }}
           >
-            {developerCount}
+            {TECHNICALCount}
           </p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
@@ -250,11 +250,10 @@ export default function TeamPage() {
           return (
             <div
               key={member.id}
-              className={`bg-white rounded-xl border shadow-sm p-5 relative group hover:shadow-md transition-all ${
-                isYou
-                  ? 'border-indigo-200 ring-1 ring-indigo-100'
-                  : 'border-gray-100'
-              }`}
+              className={`bg-white rounded-xl border shadow-sm p-5 relative group hover:shadow-md transition-all ${isYou
+                ? 'border-indigo-200 ring-1 ring-indigo-100'
+                : 'border-gray-100'
+                }`}
             >
               {/* "You" indicator */}
               {isYou && (
@@ -293,7 +292,7 @@ export default function TeamPage() {
                   >
                     {personaInfo.icon}
                   </span>
-                  {member.persona === 'MANAGER' ? 'Manager' : 'Developer'}
+                  {member.persona === 'EXECUTIVE' ? 'EXECUTIVE' : 'TECHNICAL'}
                 </span>
               </div>
 

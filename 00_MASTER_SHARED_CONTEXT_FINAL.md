@@ -18,13 +18,13 @@
 
 ## 2. WHAT WE ARE BUILDING — ONE PARAGRAPH
 
-Banquoite is an enterprise AI portal for NatWest banking teams. It lets any user — regardless of technical skill — ask natural language questions about segregated enterprise data and receive instant, trustworthy answers. A non-technical Manager gets a simplified English answer with charts. A Developer gets SQL, table references, and technical context. Every answer shows exactly which data sources were used, what SQL was executed, and how the AI reasoned — this is the Chain of Thought transparency layer. Data Owners control which of their tables the AI is allowed to access through a self-service onboarding flow. A Platform Admin sits above all teams and governs which tables each team can access. An Enterprise Analyst can query across multiple teams' data simultaneously. The system also proactively monitors data for anomalies and allows users to schedule recurring reports delivered to their dashboard or email.
+Banquoite is an enterprise AI portal for NatWest banking teams. It lets any user — regardless of technical skill — ask natural language questions about segregated enterprise data and receive instant, trustworthy answers. A non-technical EXECUTIVE gets a simplified English answer with charts. A TECHNICAL gets SQL, table references, and technical context. Every answer shows exactly which data sources were used, what SQL was executed, and how the AI reasoned — this is the Chain of Thought transparency layer. Data Owners control which of their tables the AI is allowed to access through a self-service onboarding flow. A Platform Admin sits above all teams and governs which tables each team can access. An Enterprise Analyst can query across multiple teams' data simultaneously. The system also proactively monitors data for anomalies and allows users to schedule recurring reports delivered to their dashboard or email.
 
 ---
 
 ## 3. THE THREE PILLARS (NatWest judging criteria)
 
-1. **Clarity** — Answers simple enough for non-experts. Manager persona enforces this.
+1. **Clarity** — Answers simple enough for non-experts. EXECUTIVE persona enforces this.
 2. **Trust** — Chain of Thought shows every source, table, and SQL used. Data Owner controls access. Platform Admin governs the entire estate.
 3. **Speed** — Near-instant responses. LangGraph runs SQL generation and RAG retrieval in parallel.
 
@@ -121,7 +121,7 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  persona VARCHAR(20) NOT NULL CHECK (persona IN ('MANAGER', 'DEVELOPER')),
+  persona VARCHAR(20) NOT NULL CHECK (persona IN ('EXECUTIVE', 'TECHNICAL')),
   role VARCHAR(20) NOT NULL DEFAULT 'ANALYST' CHECK (role IN ('DATA_OWNER', 'ANALYST', 'PLATFORM_ADMIN', 'ENTERPRISE_ANALYST')),
   team_id UUID REFERENCES teams(id),  -- organisational team (can be NULL for PLATFORM_ADMIN)
   created_at TIMESTAMP DEFAULT NOW()
@@ -228,7 +228,7 @@ CREATE TABLE alerts (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Dashboard cards — persistent scheduled report outputs visible to Manager
+-- Dashboard cards — persistent scheduled report outputs visible to EXECUTIVE
 CREATE TABLE dashboard_cards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id),
@@ -354,7 +354,7 @@ from typing import TypedDict, List
 class PipelineState(TypedDict):
     user_query: str           # The raw question from the user
     user_id: str              # UUID of the user (from JWT)
-    user_persona: str         # "MANAGER" or "DEVELOPER"
+    user_persona: str         # "EXECUTIVE" or "TECHNICAL"
     team_id: str              # User's home team UUID (organisational affiliation)
     allowed_team_ids: List[str]  # List of team UUIDs this user's pipeline can access
                                   # For ANALYST: [team_id] — one item
@@ -381,7 +381,7 @@ class PipelineState(TypedDict):
 
 ```
 POST /auth/register
-Body: { email, password, name, persona: "MANAGER"|"DEVELOPER", role: "DATA_OWNER"|"ANALYST"|"ENTERPRISE_ANALYST", team_name: str }
+Body: { email, password, name, persona: "EXECUTIVE"|"TECHNICAL", role: "DATA_OWNER"|"ANALYST"|"ENTERPRISE_ANALYST", team_name: str }
 Note: PLATFORM_ADMIN accounts are seeded directly — not created via register endpoint.
 Response: { access_token: str, token_type: "bearer", user: { id, email, name, persona, role } }
 
@@ -527,7 +527,7 @@ Auth: Bearer token
 Response: { id, email, name, persona, role, team_id, accessible_teams: [{ team_id, team_name }] }
 
 PATCH /users/me
-Body: { persona?: "MANAGER"|"DEVELOPER", name?: str }
+Body: { persona?: "EXECUTIVE"|"TECHNICAL", name?: str }
 Auth: Bearer token
 Response: { id, email, name, persona }
 ```
@@ -597,7 +597,7 @@ NEXT_PUBLIC_APP_NAME=Banquoite
 │   │   ├── anomaly_service.py
 │   │   └── notification_service.py
 │   ├── vectorstore/
-│   │   ├── chroma_manager.py
+│   │   ├── chroma_EXECUTIVE.py
 │   │   └── ingest.py
 │   ├── mock_data/
 │   │   ├── generate_transactions.py
@@ -637,8 +637,8 @@ NEXT_PUBLIC_APP_NAME=Banquoite
 │   ├── components/
 │   │   ├── Chatroom.tsx
 │   │   ├── ChainOfThought.tsx
-│   │   ├── ManagerDashboard.tsx
-│   │   ├── DeveloperView.tsx
+│   │   ├── EXECUTIVEDashboard.tsx
+│   │   ├── TECHNICALView.tsx
 │   │   ├── MessageBubble.tsx
 │   │   ├── AlertCenter.tsx
 │   │   ├── ScheduledQueryForm.tsx
@@ -695,15 +695,15 @@ NEXT_PUBLIC_APP_NAME=Banquoite
 ## 12. DEMO SCENARIOS — ALIGNED TO ALL 4 NATWEST USE CASES
 
 **Use Case 1 — Understand what changed:**
-"Why did transaction failures spike last Tuesday?" — Manager persona, Team A analyst.
+"Why did transaction failures spike last Tuesday?" — EXECUTIVE persona, Team A analyst.
 Expected: Simplified explanation identifying the spike period + region, bar chart, CoT shows SQL + table sources.
 
 **Use Case 2 — Compare:**
-"Compare successful vs failed payments in the North vs South region this month" — Developer persona.
+"Compare successful vs failed payments in the North vs South region this month" — TECHNICAL persona.
 Expected: SQL with GROUP BY region and status, date resolved to current month.
 
 **Use Case 3 — Breakdown (decomposition):**
-"Show me the breakdown of total transaction volume by merchant category this quarter" — Manager persona.
+"Show me the breakdown of total transaction volume by merchant category this quarter" — EXECUTIVE persona.
 Expected: Pie or bar chart showing each category's share.
 
 **Use Case 4 — Summarize:**

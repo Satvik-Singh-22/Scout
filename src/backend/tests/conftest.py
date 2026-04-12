@@ -169,7 +169,7 @@ async def test_analyst(async_session: AsyncSession, test_team: Team):
         email=f"analyst-{_RUN_ID}{TEST_EMAIL_DOMAIN}",
         name="Test Analyst",
         password_hash=pwd_context.hash("TestPass123!"),
-        persona="MANAGER",
+        persona="EXECUTIVE",
         role="ANALYST",
         team_id=test_team.id,
     )
@@ -195,7 +195,7 @@ async def test_data_owner(async_session: AsyncSession, test_team: Team):
         email=f"owner-{_RUN_ID}{TEST_EMAIL_DOMAIN}",
         name="Test Data Owner",
         password_hash=pwd_context.hash("TestPass123!"),
-        persona="DEVELOPER",
+        persona="TECHNICAL",
         role="DATA_OWNER",
         team_id=test_team.id,
     )
@@ -221,7 +221,7 @@ async def test_platform_admin(async_session: AsyncSession):
         email=f"admin-{_RUN_ID}{TEST_EMAIL_DOMAIN}",
         name="Test Platform Admin",
         password_hash=pwd_context.hash("AdminPass123!"),
-        persona="DEVELOPER",
+        persona="TECHNICAL",
         role="PLATFORM_ADMIN",
         team_id=None,
     )
@@ -244,7 +244,7 @@ async def test_enterprise_analyst(
         email=f"enterprise-{_RUN_ID}{TEST_EMAIL_DOMAIN}",
         name="Test Enterprise Analyst",
         password_hash=pwd_context.hash("TestPass123!"),
-        persona="MANAGER",
+        persona="EXECUTIVE",
         role="ENTERPRISE_ANALYST",
         team_id=test_team.id,
     )

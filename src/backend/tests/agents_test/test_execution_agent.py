@@ -15,7 +15,7 @@ class TestExecutionAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "Delete all transactions.",
             "user_id": "test",
-            "user_persona": "MANAGER",
+            "user_persona": "EXECUTIVE",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",
@@ -39,7 +39,7 @@ class TestExecutionAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "Show me customer data.",
             "user_id": "test",
-            "user_persona": "MANAGER",
+            "user_persona": "EXECUTIVE",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",

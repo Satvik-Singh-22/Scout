@@ -22,7 +22,7 @@ backend/agents/synthesis_agent.py        ← Build sixth (hour 11–12)
 backend/agents/persona_agent.py          ← Build seventh (hour 12–14)
 backend/agents/pipeline.py               ← Wire everything (hour 14–16)
 backend/agents/anomaly_agent.py          ← Build after pipeline works (hour 18–22)
-backend/vectorstore/chroma_manager.py    ← Build alongside rag_agent (hour 8–9)
+backend/vectorstore/chroma_EXECUTIVE.py    ← Build alongside rag_agent (hour 8–9)
 backend/tests/test_orchestrator_agent.py ← Write at hour 40
 backend/tests/test_sql_gen_agent.py      ← Write at hour 40
 backend/tests/test_relevancy_agent.py    ← Write at hour 41
@@ -283,7 +283,7 @@ def parse_sql_output(raw: str) -> str:
 ```python
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from backend.vectorstore.chroma_manager import get_retriever
+from backend.vectorstore.chroma_EXECUTIVE import get_retriever
 
 def rag_agent(state: PipelineState) -> dict:
     if state["query_intent"] == "SQL_ONLY":
@@ -297,7 +297,7 @@ def rag_agent(state: PipelineState) -> dict:
 
 ---
 
-## FILE 6: `chroma_manager.py` (in /vectorstore/)
+## FILE 6: `chroma_EXECUTIVE.py` (in /vectorstore/)
 
 **Purpose:** Initializes ChromaDB and provides a retriever factory. Called by `rag_agent.py`.
 
@@ -441,10 +441,10 @@ Format `rag_chunks` as: Numbered list of text excerpts. If empty, write "No text
 
 **Output to state:** `final_answer`, `chain_of_thought`
 
-**Manager prompt template:**
+**EXECUTIVE prompt template:**
 ```python
-MANAGER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a business intelligence assistant for a non-technical banking manager.
+EXECUTIVE_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are a business intelligence assistant for a non-technical banking EXECUTIVE.
 Rules:
 - Use plain English. No SQL. No technical jargon.
 - Lead with the key finding in one sentence.
@@ -461,10 +461,10 @@ Write a clear, simple answer:""")
 ])
 ```
 
-**Developer prompt template:**
+**TECHNICAL prompt template:**
 ```python
-DEVELOPER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a technical data analyst assistant for a developer.
+TECHNICAL_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are a technical data analyst assistant for a TECHNICAL.
 Rules:
 - Lead with the direct answer.
 - Include specific metrics, percentages, and exact values.

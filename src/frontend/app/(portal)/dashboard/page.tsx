@@ -125,11 +125,10 @@ export default function DashboardPage() {
               Overview
             </h1>
             <span
-              className={`px-3 py-1 text-[10px] font-bold tracking-widest rounded-full uppercase ${
-                user.persona === 'MANAGER'
+              className={`px-3 py-1 text-[10px] font-bold tracking-widest rounded-full uppercase ${user.persona === 'EXECUTIVE'
                   ? 'bg-indigo-100/60 text-indigo-700'
                   : 'bg-gray-900 text-white'
-              }`}
+                }`}
             >
               {user.persona}
             </span>
@@ -476,11 +475,10 @@ export default function DashboardPage() {
                 Alert Monitor
               </h2>
               <span
-                className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
-                  unreadAlerts.length > 0
+                className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${unreadAlerts.length > 0
                     ? 'bg-red-100 text-red-700'
                     : 'bg-green-100 text-green-700'
-                }`}
+                  }`}
               >
                 {unreadAlerts.length > 0
                   ? `${unreadAlerts.length} Unread`
