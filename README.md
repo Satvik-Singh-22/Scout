@@ -522,9 +522,9 @@ Built with intensity and conviction by **Aayush Gupta & Team** for the **NatWest
 
 ---
 
-## 📜 Licence
-
-Distributed under the **Apache 2.0 License**. See `LICENSE` for full terms.
+## License
+This project is licensed under the Apache License 2.0.
+See the LICENSE file for details.
 
 ---
 
