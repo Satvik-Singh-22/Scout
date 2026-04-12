@@ -67,6 +67,12 @@ export default function PortalLayout({
 
   const navItems = [
     ...(user?.role !== 'PLATFORM_ADMIN'
+      ? [{ href: '/chat', label: 'Chat', icon: 'chat' }]
+      : []),
+    ...(user?.role !== 'PLATFORM_ADMIN'
+      ? [{ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' }]
+      : []),
+    ...(user?.role !== 'PLATFORM_ADMIN'
       ? [
           {
             href: '/alerts',
