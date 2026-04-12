@@ -51,7 +51,7 @@ Prior conversation context:
 If the current question is a follow-up (uses "same", "that", "those", "also", "instead", "now show"), 
 resolve what it refers to using the prior context before classifying.
 
-Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|RAG_ONLY|HYBRID|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
+Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
 """),
     ("human", "User question: {user_query}")
 ])
