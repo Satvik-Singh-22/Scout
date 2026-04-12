@@ -211,7 +211,7 @@ export default function ScheduledPage() {
                     )}
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)}</span>
+                    <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)} (UTC)</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
