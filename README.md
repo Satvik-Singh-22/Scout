@@ -170,6 +170,7 @@ The **Platform Admin** acts as the central authority for data governance, ensuri
 
 ---
 
+---
 #### Agentic AI Pipeline (LangGraph)
 
 A production-grade **9-node LangGraph pipeline** orchestrates every query:
@@ -191,6 +192,36 @@ A production-grade **9-node LangGraph pipeline** orchestrates every query:
 - Stateless authentication using JWT tokens (HS256, configurable expiry)  
 - Role-based access control: `PLATFORM_ADMIN`, `DATA_OWNER`, `ENTERPRISE_ANALYST`, `ANALYST`  
 - Platform Admin accounts are securely seeded and cannot be created via public endpoints  
+
+---
+## Architecture & System Design Diagrams
+
+To ensure complete clarity, transparency, and production-readiness, Scout is supported by a comprehensive set of **system design and architecture diagrams**. These diagrams collectively capture every layer of the platform — from high-level system flow to deep internal pipelines and governance models.
+
+Each diagram has been carefully designed to visually communicate how Scout operates end-to-end in a real-world enterprise environment.
+
+### Included Diagrams
+
+- **System Architecture** — End-to-end view of frontend, backend, agents, and data layers  
+- **High-Level Design (HLD)** — Core system components and their interactions  
+- **Data Flow** — Movement of data across the pipeline (SQL, RAG, synthesis)  
+- **Database ERD** — Complete schema design with relationships and constraints  
+- **API Endpoint Map** — All backend routes and their responsibilities  
+- **LangGraph Agent Pipeline** — Detailed 9-node agent orchestration flow  
+- **Role & Governance Model** — Access control, team boundaries, and permissions  
+- **Deployment Architecture** — Infrastructure layout and service deployment strategy  
+- **Development Timeline** — Build phases and implementation progression  
+- **Sequence Diagram — Chat Query End-to-End** — Full lifecycle of a user query  
+- **Sequence Diagram — Governance Demo** — Real-time access control enforcement flow  
+
+These diagrams are located in the `/docs` directory and are intended to provide:
+
+- **Instant understanding** for reviewers and judges  
+- **Strong architectural credibility** for enterprise use  
+- **Clear communication** of complex AI + data workflows  
+- **Visual storytelling** of how Scout operates at scale  
+
+> Together, these diagrams transform Scout from just a project into a **fully engineered, production-grade system**.
 
 ---
 
