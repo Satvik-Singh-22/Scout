@@ -29,6 +29,7 @@ Endpoints:
 """
 
 import asyncio
+import concurrent.futures
 import json
 import logging
 import uuid
@@ -45,6 +46,16 @@ from backend.db.models import Chatroom, Message, User, UserTeamAccess
 from backend.db.session import get_async_session
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Pipeline execution infrastructure
+# ---------------------------------------------------------------------------
+# Dedicated pool so heavy LLM work doesn't starve FastAPI's default executor
+_PIPELINE_POOL = concurrent.futures.ThreadPoolExecutor(
+    max_workers=16, thread_name_prefix="pipeline"
+)
+# Cap concurrent pipeline invocations to avoid Groq rate-limit storms
+_PIPELINE_SEMAPHORE = asyncio.Semaphore(8)
 
 import decimal, datetime, uuid
 
@@ -451,9 +462,13 @@ async def send_message(
             else:
                 invoke_fn = _mock_pipeline_invoke
 
-            # Run pipeline in thread pool (pipeline.invoke is synchronous)
-            loop = asyncio.get_event_loop()
-            pipeline_result = await loop.run_in_executor(None, invoke_fn, initial_state)
+            # Run pipeline in dedicated pool with concurrency cap and timeout.
+            async with _PIPELINE_SEMAPHORE:
+                loop = asyncio.get_event_loop()
+                pipeline_result = await asyncio.wait_for(
+                    loop.run_in_executor(_PIPELINE_POOL, invoke_fn, initial_state),
+                    timeout=120.0,
+                )
 
             final_answer = pipeline_result.get("final_answer", "")
             cot = _sanitize_for_json(pipeline_result.get("chain_of_thought", {}))
@@ -478,6 +493,9 @@ async def send_message(
             db.add(assistant_msg)
             await db.commit()
 
+        except asyncio.TimeoutError:
+            logger.warning("Pipeline timed out for chatroom %s after 120s", chatroom_id)
+            yield f"data: {_dumps({'type': 'error', 'message': 'Request timed out. Please try again.'})}\n\n"
         except Exception as exc:
             logger.exception("Pipeline error for chatroom %s", chatroom_id)
             yield f"data: {_dumps({'type': 'error', 'message': str(exc)})}\n\n"
