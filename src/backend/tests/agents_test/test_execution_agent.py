@@ -51,7 +51,8 @@ class TestExecutionAgent(unittest.TestCase):
             "rag_chunks": [],
             "synthesized_context": "",
             "final_answer": "",
-            "chain_of_thought": {}
+            "chain_of_thought": {},
+            "sql_tables_used": ["mock_customer_data"]
         }
         
         print("Testing Execution Agent Table Authorization Block...")
