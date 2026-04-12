@@ -83,7 +83,7 @@ In a modern bank, data is siloed across teams, roles and systems. The status loo
 ---
 
 <p align="center">
-  <img src="assets/features-preview.png" alt="Scout Features Overview" width="100%"/>
+  <img src="assets/features-previews.png" alt="Scout Features Overview" width="100%"/>
 </p>
 
 ### Functional Requirements
