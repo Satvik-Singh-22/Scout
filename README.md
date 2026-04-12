@@ -161,15 +161,6 @@ The **Platform Admin** acts as the central authority for data governance, ensuri
 
 ### Non-Functional Requirements
 
-#### RAG over Unstructured Data (ChromaDB)
-- Ingests customer feedback, complaints, and support tickets using sentence-transformer embeddings (`all-MiniLM-L6-v2`)
-- Supports **HYBRID queries**, combining structured SQL results with unstructured contextual insights
-- Example:  
-  *"What are customers saying about our payment failures?"*  
-  → Returns both numerical failure metrics and real customer feedback, synthesised into a single response
-
----
-
 ---
 #### Agentic AI Pipeline (LangGraph)
 
