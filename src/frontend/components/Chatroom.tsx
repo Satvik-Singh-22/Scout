@@ -11,7 +11,8 @@ const SUGGESTED_QUERIES = [
   "Which API endpoints have an average response_time_ms higher than average?",
   "Is there a correlation between latency_ms in the Tyk gateway and specific api_name values?",
   "Which services have reported cpu_usage_pct exceeding 80% in the last hour?",
-  "Show the share of transactions by region"
+  "Show the share of transactions by region",
+  "Which customers have unusually high refund-to-transaction ratios?"
 ];
 interface Props {
   chatroomId: string;

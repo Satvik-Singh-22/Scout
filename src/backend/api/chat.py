@@ -267,6 +267,40 @@ async def rename_chatroom(
 
 
 # ---------------------------------------------------------------------------
+# DELETE /chatrooms/{chatroom_id} — delete a chatroom and its history
+# ---------------------------------------------------------------------------
+@router.delete("/{chatroom_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chatroom(
+    chatroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Delete a chatroom and all its associated messages."""
+    try:
+        cr_uuid = uuid.UUID(chatroom_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid chatroom ID")
+
+    # Verify ownership
+    result = await db.execute(select(Chatroom).where(Chatroom.id == cr_uuid))
+    chatroom = result.scalar_one_or_none()
+
+    if not chatroom or chatroom.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chatroom not found or unauthorized")
+
+    # Explicitly delete associated messages (to ensure integrity if CASCADE is missing)
+    from backend.db.models import Message as DbMessage
+    from sqlalchemy import delete
+    await db.execute(delete(DbMessage).where(DbMessage.chatroom_id == cr_uuid))
+    
+    # Delete the chatroom
+    await db.delete(chatroom)
+    await db.commit()
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # GET /chatrooms/{chatroom_id}/messages — retrieve message history
 # ---------------------------------------------------------------------------
 @router.get("/{chatroom_id}/messages", response_model=list[MessageResponse])
