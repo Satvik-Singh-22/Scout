@@ -30,8 +30,8 @@ export default function MessageBubble({
       {/* Role Header */}
       {!isUser && (
         <div className="flex items-center gap-2 mb-1.5 ml-1">
-          <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-            <Bot size={14} />
+          <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center p-1">
+            <img src="/scout_icon.svg" alt="Scout" className="w-full h-full object-contain" />
           </div>
           <span className="text-xs font-bold text-gray-900">Scout AI</span>
         </div>

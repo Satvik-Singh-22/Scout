@@ -168,8 +168,8 @@ export default function Chatroom({
             </div>
           ) : messages.length === 0 && !isStreaming && (
             <div className="text-center text-gray-400 py-16">
-              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Bot size={32} className="text-indigo-500" />
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4 p-3">
+                <img src="/scout_icon.svg" alt="Scout" className="w-full h-full object-contain" />
               </div>
               <p className="text-xl font-bold text-gray-900">Scout Intelligence Portal</p>
               <p className="text-sm mt-1 text-gray-500">
@@ -201,8 +201,8 @@ export default function Chatroom({
           {isStreaming && (
             <div className="flex flex-col items-start mb-6">
               <div className="flex items-center gap-2 mb-1.5 ml-1">
-                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                  <Bot size={14} />
+                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center p-1">
+                  <img src="/scout_icon.svg" alt="Scout" className="w-full h-full object-contain" />
                 </div>
                 <span className="text-xs font-bold text-gray-900">Scout AI</span>
               </div>

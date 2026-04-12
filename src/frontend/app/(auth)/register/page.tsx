@@ -122,11 +122,7 @@ export default function RegisterPage() {
             {/* Logo */}
             <div>
               <div className="flex items-center gap-3 mb-12">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                  style={{ background: 'linear-gradient(135deg, #635bff 0%, #4f46e5 100%)' }}
-                >
-                  S
-                </div>
+                <img src="/scout_icon.svg" alt="Scout Logo" className="w-10 h-10 object-contain" />
                 <span className="text-[17px] font-bold text-gray-900 tracking-tight">Scout Enterprise</span>
               </div>
 
@@ -158,11 +154,7 @@ export default function RegisterPage() {
           <div className="flex flex-col justify-center px-8 py-8 lg:px-10 lg:py-8 overflow-y-auto" style={{ maxHeight: '100vh' }}>
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-6 lg:hidden">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold"
-                style={{ background: 'linear-gradient(135deg, #635bff 0%, #4f46e5 100%)' }}
-              >
-                S
-              </div>
+              <img src="/scout_icon.svg" alt="Scout Logo" className="w-9 h-9 object-contain" />
               <span className="text-base font-bold text-gray-900 tracking-tight">Scout</span>
             </div>
 
