@@ -3,7 +3,7 @@ from typing import TypedDict, List
 class PipelineState(TypedDict):
     user_query: str           # The raw question from the user
     user_id: str              # UUID of the user (from JWT)
-    user_persona: str         # "MANAGER" or "DEVELOPER"
+    user_persona: str         # "EXECUTIVE" or "TECHNICAL"
     team_id: str              # User's home team UUID (organisational affiliation)
     allowed_team_ids: List[str]  # List of team UUIDs this user's pipeline can access
     current_date: str         # ISO date string e.g. "2025-01-15"

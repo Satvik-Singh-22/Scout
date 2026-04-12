@@ -27,7 +27,7 @@ class TestRegistration:
                 "email": "newuser@banquoite.dev",
                 "password": "SecurePass123!",
                 "name": "New User",
-                "persona": "MANAGER",
+                "persona": "EXECUTIVE",
                 "role": "ANALYST",
                 "team_name": "New Team",
             },
@@ -38,7 +38,7 @@ class TestRegistration:
         assert data["token_type"] == "bearer"
         assert data["user"]["email"] == "newuser@banquoite.dev"
         assert data["user"]["name"] == "New User"
-        assert data["user"]["persona"] == "MANAGER"
+        assert data["user"]["persona"] == "EXECUTIVE"
         assert data["user"]["role"] == "ANALYST"
 
     async def test_register_duplicate_email(
@@ -51,7 +51,7 @@ class TestRegistration:
                 "email": test_analyst.email,
                 "password": "AnotherPass123!",
                 "name": "Duplicate",
-                "persona": "DEVELOPER",
+                "persona": "TECHNICAL",
                 "role": "ANALYST",
                 "team_name": "Any Team",
             },
@@ -82,7 +82,7 @@ class TestRegistration:
                 "email": "short@banquoite.dev",
                 "password": "short",
                 "name": "Short Pass",
-                "persona": "MANAGER",
+                "persona": "EXECUTIVE",
                 "role": "ANALYST",
                 "team_name": "Some Team",
             },
@@ -97,7 +97,7 @@ class TestRegistration:
                 "email": "access_test@banquoite.dev",
                 "password": "SecurePass123!",
                 "name": "Access Test",
-                "persona": "MANAGER",
+                "persona": "EXECUTIVE",
                 "role": "ANALYST",
                 "team_name": "Access Team",
             },

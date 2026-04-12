@@ -13,7 +13,7 @@ export default function RegisterPage() {
     password: '',
     name: '',
     team_id: '',
-    persona: 'MANAGER',
+    persona: 'EXECUTIVE',
     role: 'ANALYST'
   })
   const [error, setError] = useState('')
@@ -96,8 +96,8 @@ export default function RegisterPage() {
   ]
 
   const personaOptions = [
-    { value: 'MANAGER', label: 'Manager', icon: '📊', description: 'Charts & executive summaries' },
-    { value: 'DEVELOPER', label: 'Developer', icon: '💻', description: 'Raw SQL & technical details' },
+    { value: 'EXECUTIVE', label: 'EXECUTIVE', icon: '📊', description: 'Charts & executive summaries' },
+    { value: 'TECHNICAL', label: 'TECHNICAL', icon: '💻', description: 'Raw SQL & technical details' },
   ]
 
   const inputClasses = "w-full px-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 bg-gray-50/50 outline-none transition-all duration-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 hover:border-gray-300"
@@ -335,11 +335,10 @@ export default function RegisterPage() {
                         key={option.value}
                         type="button"
                         onClick={() => updateField('role', option.value)}
-                        className={`relative p-3 rounded-xl text-left transition-all duration-200 border ${
-                          isSelected
-                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/30'
-                            : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`relative p-3 rounded-xl text-left transition-all duration-200 border ${isSelected
+                          ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/30'
+                          : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         <span className={`block text-xs font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-700'}`}>
                           {option.label}
@@ -371,11 +370,10 @@ export default function RegisterPage() {
                         key={option.value}
                         type="button"
                         onClick={() => updateField('persona', option.value)}
-                        className={`relative p-3 rounded-xl text-left transition-all duration-200 border ${
-                          isSelected
-                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/30'
-                            : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                        className={`relative p-3 rounded-xl text-left transition-all duration-200 border ${isSelected
+                          ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/30'
+                          : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         <span className="flex items-center gap-2">
                           <span className="text-base">{option.icon}</span>

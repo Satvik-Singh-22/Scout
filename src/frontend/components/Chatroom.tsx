@@ -3,14 +3,14 @@ import { useState, useEffect, useRef } from 'react';
 import { getMessages, streamMessage } from '@/lib/api-client';
 import type { Message, ChainOfThought as CoTType } from '@/lib/api-client';
 import MessageBubble from './MessageBubble';
-import { Send } from 'lucide-react';
+import { Send, Bot, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface Props {
   chatroomId: string;
-  userPersona: 'MANAGER' | 'DEVELOPER';
-  onPersonaChange?: (persona: 'MANAGER' | 'DEVELOPER') => void;
+  userPersona: 'EXECUTIVE' | 'TECHNICAL';
+  onPersonaChange?: (persona: 'EXECUTIVE' | 'TECHNICAL') => void;
   initialQuery?: string;
 }
 
@@ -57,19 +57,31 @@ export default function Chatroom({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [streamingContent, setStreamingContent] = useState('');
   const didAutoSend = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    setIsLoadingMessages(true);
     getMessages(chatroomId)
       .then(setMessages)
-      .catch(() => {});
+      .catch(() => { })
+      .finally(() => setIsLoadingMessages(false));
   }, [chatroomId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingContent]);
+  }, [messages, streamingContent, isStreaming]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [input]);
 
   // Auto-send initialQuery from dashboard Quick Ask
   useEffect(() => {
@@ -77,7 +89,6 @@ export default function Chatroom({
       didAutoSend.current = true;
       handleSendQuery(initialQuery);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
 
   const handleSendQuery = (query: string) => {
@@ -117,14 +128,14 @@ export default function Chatroom({
         setIsStreaming(false);
       },
       (err) => {
-        const errMsg: Message = {
+        const assistantMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'ASSISTANT',
           content: `Error: ${err}`,
           chain_of_thought: null,
           created_at: new Date().toISOString(),
         };
-        setMessages((prev) => [...prev, errMsg]);
+        setMessages((prev) => [...prev, assistantMsg]);
         setStreamingContent('');
         setIsStreaming(false);
       },
@@ -141,109 +152,147 @@ export default function Chatroom({
   };
 
   const personas = [
-    {
-      key: 'DEVELOPER' as const,
-      label: 'Technical',
-      desc: 'SQL, tables & raw details',
-      icon: <DevIcon />,
-      activeColor: 'text-emerald-600',
-      activeBg: 'bg-white border border-gray-200',
-    },
-    {
-      key: 'MANAGER' as const,
-      label: 'Executive',
-      desc: 'Concise insights & action items',
-      icon: <MgrIcon />,
-      activeColor: 'text-violet-600',
-      activeBg: 'bg-white border border-gray-200',
-    },
+    { key: 'TECHNICAL' as const, label: 'Technical', icon: <DevIcon /> },
+    { key: 'EXECUTIVE' as const, label: 'Executive', icon: <MgrIcon /> },
   ];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-        {messages.length === 0 && !isStreaming && (
-          <div className="text-center text-gray-400 mt-16">
-            <p className="text-lg font-medium">Ask anything about your data</p>
-            <p className="text-sm mt-1">
-              Try: &quot;What is total payment volume this week?&quot;
-            </p>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            persona={userPersona}
-            onResend={handleSendQuery}
-          />
-        ))}
-        {isStreaming && streamingContent && (
-          <div className="flex justify-start">
-            <div className="max-w-2xl bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-800">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {streamingContent}
-              </ReactMarkdown>
-              <span className="inline-block w-1 h-4 bg-indigo-500 ml-1 animate-pulse" />
+      <div className="flex-1 overflow-y-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          {isLoadingMessages ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs font-medium uppercase tracking-widest">Retrieving history...</p>
             </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
+          ) : messages.length === 0 && !isStreaming && (
+            <div className="text-center text-gray-400 py-16">
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4">
+                <Bot size={32} className="text-indigo-500" />
+              </div>
+              <p className="text-xl font-bold text-gray-900">Scout Intelligence Portal</p>
+              <p className="text-sm mt-1 text-gray-500">
+                Ask anything about your processed data and customer insights.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
+                {['Total payment volume', 'Top customer segments', 'Churn risk analysis'].map(suggestion => (
+                  <button 
+                    key={suggestion}
+                    onClick={() => handleSendQuery(suggestion)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {messages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              persona={userPersona}
+              onResend={handleSendQuery}
+            />
+          ))}
+
+          {isStreaming && (
+            <div className="flex flex-col items-start mb-6">
+              <div className="flex items-center gap-2 mb-1.5 ml-1">
+                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Bot size={14} />
+                </div>
+                <span className="text-xs font-bold text-gray-900">Scout AI</span>
+              </div>
+              
+              <div className="w-full max-w-[85%] md:max-w-2xl bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-4 text-sm text-gray-800 shadow-sm relative">
+                {!streamingContent ? (
+                  <div className="flex items-center gap-2 text-gray-400 font-medium italic">
+                    <span className="flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
+                    </span>
+                    <span>Thinking...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">
+                      AI Response
+                    </div>
+                    <div className="prose prose-sm max-w-none prose-p:leading-relaxed">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {streamingContent}
+                      </ReactMarkdown>
+                    </div>
+                    <span className="inline-block w-1 h-4 bg-indigo-500 ml-1 animate-pulse" />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} className="h-4" />
+        </div>
       </div>
 
       {/* Input area */}
-      <div className="sticky bottom-0 border-t border-gray-200 px-6 py-4 bg-white">
-        <div className="flex items-center gap-3">
-          {/* Persona toggle */}
-          <div className="flex items-center bg-gray-100 rounded-xl p-0.5 gap-0.5 shrink-0">
-            {personas.map((p) => {
-              const isActive = userPersona === p.key;
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => onPersonaChange?.(p.key)}
-                  disabled={isStreaming}
-                  className={`
-                    flex flex-col items-start gap-0.5 px-3 py-1.5 rounded-[10px]
-                    text-left transition-all duration-200 disabled:opacity-50
-                    ${isActive ? p.activeBg + ' shadow-sm' : 'hover:bg-white/50'}
-                  `}
-                >
-                  <div
-                    className={`flex items-center gap-1.5 ${isActive ? p.activeColor : 'text-gray-400'}`}
+      <div className="border-t border-gray-200 bg-white p-4 pb-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+            <div className="flex items-center bg-gray-50/50 border-b border-gray-100 px-3 py-2 rounded-t-2xl justify-between">
+              <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                {personas.map(p => (
+                  <button
+                    key={p.key}
+                    onClick={() => onPersonaChange?.(p.key)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                      userPersona === p.key 
+                        ? 'bg-indigo-600 text-white shadow-sm' 
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
                   >
-                    {p.icon}
-                    <span className="text-xs font-semibold">{p.label}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] leading-tight ${isActive ? 'text-gray-500' : 'text-gray-400'}`}
-                  >
-                    {p.desc}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                    {p.key === 'TECHNICAL' ? <DevIcon /> : <MgrIcon />}
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:block">
+                Secure Data Pipeline
+              </span>
+            </div>
 
-          {/* Input field */}
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Ask a question about your data..."
-            disabled={isStreaming}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={isStreaming || !input.trim()}
-            className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-          >
-            <Send size={18} />
-          </button>
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Ask a question about your data..."
+              disabled={isStreaming}
+              className="w-full px-4 py-3 bg-transparent text-sm focus:outline-none resize-none min-h-[52px] leading-relaxed disabled:opacity-50"
+            />
+            
+            <div className="flex items-center justify-between px-3 py-2 border-t border-gray-50">
+              <span className="text-[10px] text-gray-400 font-medium italic">
+                {input.length > 0 ? `${input.length} characters` : 'Press Enter to send, Shift+Enter for new line'}
+              </span>
+              <button
+                onClick={handleSend}
+                disabled={isStreaming || !input.trim()}
+                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-all shadow-sm active:scale-95"
+              >
+                Send Query
+                <Send size={14} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

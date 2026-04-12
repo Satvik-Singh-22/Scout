@@ -2,8 +2,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from backend.agents.llm import get_llm
 from backend.agents.state import PipelineState
 
-MANAGER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a business intelligence assistant for a non-technical banking manager.
+EXECUTIVE_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are a business intelligence assistant for a non-technical banking EXECUTIVE.
 Rules:
 - Use plain English. No SQL. No technical jargon.
 - Lead with the key finding in one sentence.
@@ -19,8 +19,8 @@ Data findings: {synthesized_context}
 Write a clear, simple answer:""")
 ])
 
-DEVELOPER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a technical data analyst assistant for a developer.
+TECHNICAL_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are a technical data analyst assistant for a technical user.
 Rules:
 - Lead with the direct answer.
 - Include specific metrics, percentages, and exact values.
@@ -94,20 +94,20 @@ def build_chain_of_thought(state: PipelineState) -> dict:
 
 
 def persona_agent(state: PipelineState) -> dict:
-    persona = state.get("user_persona", "MANAGER").upper()
+    persona = state.get("user_persona", "EXECUTIVE").upper()
 
     llm = get_llm(temperature=0.7)
 
-    if persona == "DEVELOPER":
-        chain = DEVELOPER_PROMPT | llm
+    if persona == "TECHNICAL":
+        chain = TECHNICAL_PROMPT | llm
         result = chain.invoke({
             "user_query": state.get("user_query"),
             "synthesized_context": state.get("synthesized_context"),
             "sql_executed": state.get("generated_sql", "None"),
             "tables_referenced": state.get("relevant_tables", [])
         })
-    else:  # MANAGER is default
-        chain = MANAGER_PROMPT | llm
+    else:  # EXECUTIVE is default
+        chain = EXECUTIVE_PROMPT | llm
         result = chain.invoke({
             "user_query": state.get("user_query"),
             "synthesized_context": state.get("synthesized_context")

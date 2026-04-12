@@ -19,7 +19,7 @@ frontend/app/(auth)/register/page.tsx
 frontend/app/(portal)/layout.tsx                   ← sidebar navigation
 frontend/app/(portal)/chat/page.tsx                ← chatroom list
 frontend/app/(portal)/chat/[chatroom_id]/page.tsx  ← active chatroom
-frontend/app/(portal)/dashboard/page.tsx           ← Manager dashboard + cards
+frontend/app/(portal)/dashboard/page.tsx           ← EXECUTIVE dashboard + cards
 frontend/app/(portal)/onboarding/page.tsx          ← 4-step Data Owner flow
 frontend/app/(portal)/alerts/page.tsx              ← Alert Center
 frontend/app/(portal)/scheduled/page.tsx           ← Scheduled queries list
@@ -27,8 +27,8 @@ frontend/app/(portal)/scheduled/[id]/history/page.tsx ← Past run history
 frontend/app/(portal)/settings/page.tsx            ← Persona toggle + display name
 frontend/components/Chatroom.tsx
 frontend/components/ChainOfThought.tsx
-frontend/components/ManagerDashboard.tsx
-frontend/components/DeveloperView.tsx
+frontend/components/EXECUTIVEDashboard.tsx
+frontend/components/TECHNICALView.tsx
 frontend/components/MessageBubble.tsx
 frontend/components/AlertCenter.tsx
 frontend/components/ScheduledQueryForm.tsx
@@ -49,7 +49,7 @@ frontend/lib/api-client.ts
 - Copy API contracts from Master Shared Context into `/lib/api-client.ts` as typed interfaces.
 
 ### Hour 2–16 (build all pages and components against MSW)
-Build in this order: `api-client.ts` → `login` → `register` → `chat list` → `chatroom` → `ChainOfThought` → `ManagerDashboard` → `DeveloperView` → `MessageBubble`
+Build in this order: `api-client.ts` → `login` → `register` → `chat list` → `chatroom` → `ChainOfThought` → `EXECUTIVEDashboard` → `TECHNICALView` → `MessageBubble`
 
 ### Hour 16–24 (build secondary screens)
 Build: `onboarding` (4 steps) → `alerts` → `scheduled` → `dashboard` → `settings` → `scheduled/[id]/history`
@@ -68,7 +68,7 @@ Build: `onboarding` (4 steps) → `alerts` → `scheduled` → `dashboard` → `
 ### Hour 36–44 (final checks)
 - Mobile responsiveness pass.
 - Confirm CoT panel opens/closes correctly.
-- Confirm Manager gets charts, Developer gets SQL code block.
+- Confirm EXECUTIVE gets charts, TECHNICAL gets SQL code block.
 - Record demo backup video.
 
 ---
@@ -97,7 +97,7 @@ export interface User {
   id: string
   email: string
   name: string
-  persona: 'MANAGER' | 'DEVELOPER'
+  persona: 'EXECUTIVE' | 'TECHNICAL'
   role: 'DATA_OWNER' | 'ANALYST'
 }
 
@@ -331,8 +331,8 @@ export async function updateMe(payload: { persona?: string; name?: string }): Pr
 - `inputValue: string` — current input field value
 
 **Persona rendering:**
-- If `user.persona === 'MANAGER'`: render `<ManagerDashboard />` with any chart data from message content
-- If `user.persona === 'DEVELOPER'`: render `<DeveloperView />` with SQL block
+- If `user.persona === 'EXECUTIVE'`: render `<EXECUTIVEDashboard />` with any chart data from message content
+- If `user.persona === 'TECHNICAL'`: render `<TECHNICALView />` with SQL block
 
 **Key behavior:**
 - When streaming starts: append empty assistant message with `isStreaming: true`
@@ -359,9 +359,9 @@ export async function updateMe(payload: { persona?: string; name?: string }): Pr
 
 ---
 
-## COMPONENT: `ManagerDashboard.tsx`
+## COMPONENT: `EXECUTIVEDashboard.tsx`
 
-**What it does:** Renders the Manager persona answer as a visual card. Used inside the chatroom for Manager users.
+**What it does:** Renders the EXECUTIVE persona answer as a visual card. Used inside the chatroom for EXECUTIVE users.
 
 **Props:** `answer: string`, `sqlResults: object[]`, `chatroomId: string`
 
@@ -381,9 +381,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, L
 
 ---
 
-## COMPONENT: `DeveloperView.tsx`
+## COMPONENT: `TECHNICALView.tsx`
 
-**What it does:** Renders the Developer persona answer with technical detail. Used inside the chatroom for Developer users.
+**What it does:** Renders the TECHNICAL persona answer with technical detail. Used inside the chatroom for TECHNICAL users.
 
 **Props:** `answer: string`, `chainOfThought: ChainOfThought | null`
 
@@ -476,9 +476,9 @@ Unread alerts have a solid left border accent. Read alerts are slightly dimmed.
 
 1. **Display name** — text input, shows current name, save button calls `PATCH /users/me`
 2. **Persona** — two large radio cards side by side:
-   - Manager card: icon, "Business insights, simplified answers, charts" description
-   - Developer card: icon, "SQL queries, technical details, full data context"
-   - On select + save: calls `PATCH /users/me` with `{persona: "MANAGER"|"DEVELOPER"}`
+   - EXECUTIVE card: icon, "Business insights, simplified answers, charts" description
+   - TECHNICAL card: icon, "SQL queries, technical details, full data context"
+   - On select + save: calls `PATCH /users/me` with `{persona: "EXECUTIVE"|"TECHNICAL"}`
 3. **Account info** — read-only: email, role, team
 
 ---
@@ -509,7 +509,7 @@ export const handlers = [
   http.post('/auth/login', () =>
     HttpResponse.json({
       access_token: 'mock-token',
-      user: { id: '1', email: 'demo@bank.com', name: 'Demo User', persona: 'MANAGER', role: 'ANALYST' }
+      user: { id: '1', email: 'demo@bank.com', name: 'Demo User', persona: 'EXECUTIVE', role: 'ANALYST' }
     })
   ),
   http.get('/chatrooms', () =>

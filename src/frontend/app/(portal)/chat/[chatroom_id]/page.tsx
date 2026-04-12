@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getMe, User } from '@/lib/api-client';
+import { getMe, getChatrooms, renameChatroom, User, Chatroom as ChatroomType } from '@/lib/api-client';
 import Chatroom from '@/components/Chatroom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit2, Search } from 'lucide-react';
 
 export default function ChatroomPage({
   params,
@@ -15,25 +15,62 @@ export default function ChatroomPage({
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const [user, setUser] = useState<User | null>(null);
-  const [persona, setPersona] = useState<'MANAGER' | 'DEVELOPER' | null>(null);
+  const [persona, setPersona] = useState<'EXECUTIVE' | 'TECHNICAL' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chatroom, setChatroom] = useState<ChatroomType | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
-    getMe()
-      .then((u) => {
+    const fetchData = async () => {
+      try {
+        const [u, rooms] = await Promise.all([getMe(), getChatrooms()]);
         setUser(u);
-        setPersona(u.persona as 'MANAGER' | 'DEVELOPER');
+        setPersona(u.persona as 'EXECUTIVE' | 'TECHNICAL');
+        
+        const current = rooms.find(r => r.id === params.chatroom_id);
+        if (current) {
+          setChatroom(current);
+          setNewName(current.name || '');
+        }
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         router.push('/login');
-      });
+      }
+    };
+    fetchData();
+  }, [params.chatroom_id, router]);
+
+  // Keyboard shortcut Cmd/Ctrl + K to focus search (demo only - navigates to chat list)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        router.push('/chat');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [router]);
+
+  const handleRename = async () => {
+    if (!newName.trim() || !chatroom) return;
+    try {
+      const updated = await renameChatroom(chatroom.id, newName.trim());
+      setChatroom(updated);
+      setIsRenaming(false);
+    } catch {
+      alert('Failed to rename chatroom');
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-64px)] text-gray-500">
-        Loading chat...
+      <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-64px)] text-gray-500 bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium">Initializing encrypted session...</p>
+        </div>
       </div>
     );
   }
@@ -43,36 +80,75 @@ export default function ChatroomPage({
   return (
     <div className="flex-1 bg-gray-50 flex flex-col h-[calc(100vh-64px)] relative">
       {/* Header */}
-      <div className="h-14 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between px-6 shrink-0 z-10 w-full relative">
-        <div className="flex items-center gap-4">
+      <header className="h-16 border-b border-gray-200 bg-white shadow-sm flex items-center justify-between px-6 shrink-0 z-10 w-full relative">
+        <div className="flex items-center gap-4 min-w-0">
           <Link
             href="/chat"
-            className="p-1.5 text-gray-400 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 transition-all shadow-sm border border-transparent hover:border-indigo-100"
           >
             <ArrowLeft size={18} />
           </Link>
-          <div>
-            <h2 className="text-sm font-bold text-gray-900 leading-tight">
-              Chatroom: {params.chatroom_id}
-            </h2>
-            <span className="text-[10px] text-gray-500 font-medium">
-              Secured Enterprise AI Core
+          <div className="min-w-0">
+            {isRenaming ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  className="text-sm font-bold text-gray-900 border-b-2 border-indigo-500 focus:outline-none bg-transparent"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleRename();
+                    if (e.key === 'Escape') setIsRenaming(false);
+                  }}
+                />
+                <button onClick={handleRename} className="text-[10px] font-bold text-indigo-600 uppercase">Save</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 group">
+                <h2 className="text-sm font-bold text-gray-900 truncate max-w-[200px] sm:max-w-md">
+                  {chatroom?.name || `Chatroom: ${params.chatroom_id.slice(0, 8)}`}
+                </h2>
+                <button 
+                  onClick={() => setIsRenaming(true)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-indigo-600 transition-all rounded-md hover:bg-gray-50"
+                >
+                  <Edit2 size={12} />
+                </button>
+              </div>
+            )}
+            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest flex items-center gap-1">
+              <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>
+              Live Pipeline Active
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-gray-500">Mode:</span>
-          <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
-              persona === 'MANAGER'
-                ? 'bg-indigo-100 text-indigo-700'
-                : 'bg-gray-900 text-white'
-            }`}
-          >
-            {persona}
-          </span>
+        
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-gray-400 group cursor-pointer hover:bg-gray-200 transition-all" onClick={() => router.push('/chat')}>
+            <Search size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Search Chats</span>
+            <kbd className="text-[9px] bg-white border border-gray-300 px-1 rounded text-gray-500 shadow-sm ml-1 group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors capitalize">
+              {navigator.platform.toUpperCase().includes('MAC') ? '⌘' : 'Ctrl'} K
+            </kbd>
+          </div>
+
+          <div className="h-8 w-px bg-gray-100 mx-1"></div>
+
+          <div className="flex items-center gap-3">
+             <div className={`flex flex-col items-end`}>
+               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Perspective</span>
+               <div
+                 className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider shadow-sm border ${persona === 'EXECUTIVE'
+                   ? 'bg-indigo-600 text-white border-indigo-700'
+                   : 'bg-emerald-600 text-white border-emerald-700'
+                   }`}
+               >
+                 {persona} Mode
+               </div>
+             </div>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Body */}
       <Chatroom

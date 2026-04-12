@@ -27,7 +27,7 @@ class TestRagAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "What is user viewpoint about the app?",
             "user_id": "test",
-            "user_persona": "MANAGER",
+            "user_persona": "EXECUTIVE",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",
@@ -81,7 +81,7 @@ class TestRagAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "Why are users unhappy with the app performance?",
             "user_id": "test",
-            "user_persona": "MANAGER",
+            "user_persona": "EXECUTIVE",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",

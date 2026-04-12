@@ -48,7 +48,7 @@ class TestSQLGenAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "What is the total transactions amount in last week?",
             "user_id": "test",
-            "user_persona": "Manager",
+            "user_persona": "EXECUTIVE",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",

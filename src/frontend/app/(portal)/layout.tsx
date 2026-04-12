@@ -64,7 +64,7 @@ export default function PortalLayout({
     ...(user?.role === 'PLATFORM_ADMIN'
       ? [{ href: '/admin', label: 'Governance', icon: 'shield_locked' }]
       : []),
-    { href: '/settings', label: 'Settings', icon: 'settings' },
+    { href: '/profile', label: 'Profile', icon: 'person' },
   ];
 
   const topNavLinks = [
@@ -143,10 +143,10 @@ export default function PortalLayout({
               <span className="material-symbols-outlined">chat_bubble</span>
             </Link>
             <Link
-              href="/settings"
+              href="/profile"
               className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all"
             >
-              <span className="material-symbols-outlined">settings</span>
+              <span className="material-symbols-outlined">person</span>
             </Link>
           </div>
           <div className="h-6 w-px bg-outline-variant/30 hidden sm:block mx-1"></div>
