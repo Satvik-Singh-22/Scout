@@ -1,4 +1,4 @@
-# BANQUOITE — COMPLETE PITCH
+# SCOUT — COMPLETE PITCH
 ## Read this aloud. Every word is meant to be spoken.
 
 ---
@@ -17,9 +17,9 @@ That is the problem we are solving.
 
 ---
 
-## THE PRODUCT — WHAT IS BANQUOITE?
+## THE PRODUCT — WHAT IS SCOUT?
 
-We built **Banquoite**. It is an enterprise AI portal designed specifically for NatWest's internal banking teams.
+We built **Scout**. It is an enterprise AI portal designed specifically for NatWest's internal banking teams.
 
 The core idea is simple: any employee, regardless of their technical skill level, should be able to type a question in plain English and get a trustworthy, instant answer — drawn from the actual enterprise data that is relevant to their role.
 
@@ -29,7 +29,7 @@ A TECHNICAL types: *"Show me API gateway error rates by service for the past sev
 
 And critically — a senior enterprise analyst who has been granted access to multiple teams' data can ask a question that spans both the Payments domain and the Operations domain simultaneously and get a single synthesized answer that joins both data streams together. That has never been possible before without a week of coordination.
 
-That is Banquoite.
+That is Scout.
 
 ---
 
@@ -38,10 +38,10 @@ That is Banquoite.
 NatWest judged this challenge on three criteria. Let me address each directly.
 
 **Pillar one: Clarity.**
-Every answer Banquoite gives is tailored to who is asking. We have two modes — EXECUTIVE mode and TECHNICAL mode. A EXECUTIVE gets a plain English explanation, a chart, and a one-sentence summary. A TECHNICAL gets the SQL that was executed, the table names, the row counts, and the agent's reasoning chain. The same underlying answer, delivered in the language that person actually needs. No one is ever shown a raw database dump and asked to interpret it themselves.
+Every answer Scout gives is tailored to who is asking. We have two modes — EXECUTIVE mode and TECHNICAL mode. A EXECUTIVE gets a plain English explanation, a chart, and a one-sentence summary. A TECHNICAL gets the SQL that was executed, the table names, the row counts, and the agent's reasoning chain. The same underlying answer, delivered in the language that person actually needs. No one is ever shown a raw database dump and asked to interpret it themselves.
 
 **Pillar two: Trust.**
-This is where we go further than any generic AI product. Every single answer Banquoite gives is accompanied by what we call the Chain of Thought panel. It shows the user exactly which data sources were considered, exactly which tables were actually used, exactly what SQL was executed against those tables, how many rows came back, and which parts of the answer came from structured data versus unstructured text. Nothing is hidden. Nothing is a black box. The user can see, step by step, how the AI arrived at its answer and decide whether to trust it.
+This is where we go further than any generic AI product. Every single answer Scout gives is accompanied by what we call the Chain of Thought panel. It shows the user exactly which data sources were considered, exactly which tables were actually used, exactly what SQL was executed against those tables, how many rows came back, and which parts of the answer came from structured data versus unstructured text. Nothing is hidden. Nothing is a black box. The user can see, step by step, how the AI arrived at its answer and decide whether to trust it.
 
 Beyond that, the entire system is built on a governance model. Data Owners — one per team — control which of their tables the AI is even allowed to access. They register their tables through a self-service interface, write human-readable descriptions of what each table contains, and can toggle any table on or off at any moment. If a table is toggled off, the AI immediately stops using it. No redeployment. No code change. Instant.
 
@@ -110,7 +110,7 @@ All forty tables are registered in our governance system, assigned to their resp
 
 ## THE PROACTIVE FEATURES
 
-Beyond answering questions, Banquoite also monitors your data proactively.
+Beyond answering questions, Scout also monitors your data proactively.
 
 We have an anomaly detection system that runs on a schedule using APScheduler. It checks key metrics — transaction failure rates, API latency percentiles — against configured thresholds. When a threshold is breached, it generates an alert automatically. The Alert Center in the UI shows these pre-detected anomalies so a EXECUTIVE sees them the moment they log in, without having to ask.
 
@@ -156,7 +156,7 @@ The governance model we built — the four-tier role hierarchy, the master confi
 
 And the core user experience — type a question, get a trustworthy, transparent, instant answer — is exactly what NatWest's employees need to make faster, better decisions without depending on a data team queue that moves at the speed of a ticket system.
 
-That is Banquoite. Thank you.
+That is Scout. Thank you.
 
 ---
 

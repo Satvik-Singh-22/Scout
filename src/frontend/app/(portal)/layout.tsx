@@ -125,14 +125,7 @@ export default function PortalLayout({
             href={user?.role === 'PLATFORM_ADMIN' ? '/admin' : '/chat'}
             className="flex items-center gap-2"
           >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-              }}
-            >
-              <span className="font-bold text-sm">S</span>
-            </div>
+            <img src="/scout_icon.svg" alt="Scout Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
               Scout
             </span>
@@ -201,14 +194,7 @@ export default function PortalLayout({
         {/* SideNavBar */}
         <aside className="bg-gray-50 dark:bg-gray-950 w-64 fixed left-0 top-16 bottom-0 hidden md:flex flex-col p-4 gap-2 border-r border-outline-variant/10 z-30 font-inter text-sm font-medium">
           <div className="flex items-center gap-3 px-2 py-3 mb-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-              }}
-            >
-              <span className="font-bold font-manrope">S</span>
-            </div>
+            <img src="/scout_icon.svg" alt="Scout Logo" className="w-8 h-8 object-contain" />
             <div>
               <div className="text-lg font-bold font-manrope text-emerald-600 leading-tight">
                 Scout

@@ -1,4 +1,4 @@
-# Banquoite Backend — Python Dependencies
+# Scout Backend — Python Dependencies
 # Install: pip install -r requirements.txt
 
 # Web Framework
