@@ -1,11 +1,27 @@
+<!--
+Copyright 2026 The SCOUT Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div align="center">
 
 <img src="src/frontend/app/icon.svg" alt="Scout Logo" width="80" height="80"/>
 
-# 🔍 SCOUT
-### *Intelligent Self-Service Data Intelligence for the Enterprise*
+# SCOUT
+### *Smart Data Conversational & Operational Understanding Tool*
 
-**Ask a question in plain English. Get a trusted, boardroom-ready answer — in seconds.**
+**Ask a question in plain English. Get a trusted, decision-ready answer — in seconds.**
 
 ---
 
@@ -22,7 +38,7 @@
 
 ---
 
-## 🚀 Live Demo
+## Live Demo
 
 **Website:** [www.teamscout.xyz](https://www.teamscout.xyz)
 
@@ -35,7 +51,7 @@ Try out the platform yourself using the following demo credentials:
 
 ---
 
-## 🌟 What Is Scout?
+## What Is Scout?
 
 Every day, banking teams sit on mountains of data they cannot reach. Analysts wait days for reports. Executives scan through dashboards they don't understand. Critical anomalies go undetected until it's too late.
 
@@ -50,157 +66,135 @@ Every answer comes with a transparent **Chain of Thought** — showing exactly w
 
 ---
 
-## 🎯 The Problem We Solve
+## The Problem We Solve
 
-In a modern bank, data is siloed across teams, roles and systems. The status quo looks like this:
+In a modern bank, data is siloed across teams, roles and systems. The status looks like this:
 
-| The Old Way | The Scout Way |
+| <span style="color: #ef4444; font-weight: 600;">The Old Way</span> | <span style="color: #22c55e; font-weight: 600;">The Scout Way</span> |
 |---|---|
-| Analyst tickets that take days to resolve | Self-service answers in under 10 seconds |
-| Dashboards only technical staff can read | Plain English summaries for every persona |
-| No visibility into *how* an answer was computed | Full Chain of Thought with every response |
-| Any user can query any table — no guardrails | Fine-grained, team-level governance enforced by the AI |
-| Anomalies discovered only after the fact | Proactive background monitoring every 15 minutes |
-| Recurring reports require manual effort | Cron-scheduled queries delivered to email or dashboard |
+| Days of waiting for analysts | Answers in seconds, on your own |
+| Hard-to-read dashboards for technical users | Plain English insights for everyone |
+| No clarity on how answers are generated | Complete transparency with every answer |
+| Unrestricted data access, no control | Secure, team-level governance by design |
+| Issues discovered too late | Proactive monitoring in real time |
+| Manual effort for recurring reports | Automated reports, delivered on schedule |
+| Missed anomalies and delayed responses | Real-time anomaly detection & **Alerting** |
 
 ---
-
-## ✅ Features (Implemented & Working)
-
-### 🤖 Agentic AI Pipeline (LangGraph)
-A fully operational 9-node LangGraph pipeline powers every query. When a question arrives, the pipeline:
-1. **Orchestrates** — classifies intent (`SQL_ONLY`, `RAG_ONLY`, `HYBRID`, `GENERAL`, `SCHEMA_LOOKUP`)
-2. **Filters for Relevancy** — identifies the exact tables needed from the user's permitted scope
-3. **Generates SQL** — writes a secure PostgreSQL `SELECT` query with date resolution, aggregations, and LIMIT guards
-4. **Runs in Parallel** — SQL generation and RAG retrieval execute simultaneously via LangGraph parallel branches
-5. **Executes Safely** — read-only execution agent; `DROP`, `DELETE`, `UPDATE`, `INSERT` are structurally impossible
-6. **Retries on Error** — if SQL fails, the retry agent reads the error message and self-corrects (one automatic retry)
-7. **Synthesises** — merges structured SQL results with unstructured RAG context into a coherent narrative
-8. **Adapts to Persona** — the persona agent tailors the final answer for `EXECUTIVE` (plain English, bullets, chart) or `TECHNICAL` (exact metrics, SQL, table references) users
-9. **Builds Chain of Thought** — records every source touched, every table queried, confidence level, and agent path traversed
-
-### 💬 Multi-Persona Chat Interface
-- Users select their communication style: **EXECUTIVE** (non-technical, summary-first) or **TECHNICAL** (precise, data-rich)
-- Multiple named chatrooms per user — persistent history with full conversation context passed to the AI
-- Streaming responses via Server-Sent Events — the answer types in real time as it is generated
-- Chain of Thought panel rendered alongside every AI response — collapsible, showing sources, SQL, RAG chunks used, query intent and confidence
-
-### 📊 RAG over Unstructured Data (ChromaDB)
-- Customer feedback, complaints, and support tickets are ingested into ChromaDB via sentence-transformers (`all-MiniLM-L6-v2`, local, Apache 2.0)
-- Hybrid queries (`HYBRID` intent) automatically combine SQL numerical results with RAG text context in a single synthesised answer
-- Example: *"What are customers saying about our payment failures?"* → SQL returns failure counts, RAG returns verbatim customer complaints, Persona agent merges both into one coherent answer
-
-### 🔐 Four-Tier Governance Model (Fully Enforced)
-Scout implements a role hierarchy that mirrors real enterprise governance structures:
-
-```
-PLATFORM_ADMIN
- └── Sees all 40 data tables across all teams
- └── Assigns tables to teams (writes boundary into master_config)
- └── Grants cross-team access to Enterprise Analysts in real time
-     └── DATA_OWNER (per team)
-         └── Registers database connections and tables
-         └── Edits semantic definitions for their tables
-         └── Can toggle any of their team's tables active/inactive
-             └── ENTERPRISE_ANALYST
-                 └── Queries across multiple teams simultaneously
-                 └── Data scope enforced at pipeline level via user_team_access table
-                     └── ANALYST (default)
-                         └── Isolated to their own team's permitted tables
-                         └── Cannot access any other team's data — enforced per query
-```
-
-Access revocation takes effect on the **next query** — no restart required.
-
-### 🛡️ Platform Admin Governance Console
-- Visual table assignment UI: drag-and-drop style panel showing all 40 mock enterprise tables and available teams
-- Assign or revoke tables from teams in a single click
-- AI-generated semantic definitions: when a Platform Admin assigns a table, the system automatically calls the LLM to generate a professional, accurate description of the table's business purpose based on its column schema
-- User access management: view all users, their roles, and which teams they can query — update cross-team access live
-
-### 📅 Scheduled Queries (CRON-Based)
-- Users define natural language queries to run on a schedule using standard CRON expressions
-- Delivery option: **Dashboard** (creates a persistent card visible on login) or **Email** (HTML formatted report sent via Gmail OAuth2)
-- Alert conditions: schedule a query with an optional English-language alert condition (e.g., *"alert me if failed transactions exceed 1000"*) — the LLM evaluates the result against the condition after every run and sends an email if triggered
-- Background job runs every 1 minute and claims due queries atomically to prevent duplicate execution
-
-### 🔔 Anomaly Detection (Query-Coupled, Intelligent)
-
-Scout's anomaly detection does not run on a fixed global timer. Instead, it activates **automatically and exclusively when a scheduled query successfully executes** — meaning it is always working with fresh, real query output, never stale aggregate snapshots.
-
-The detection is powered by a dedicated **two-agent pipeline** that runs immediately after every successful scheduled query:
-
-1. **Anomaly Reasoner Agent** — receives the scheduled query text, the relevant tables identified during pipeline execution, and the live SQL results. It reasons over these inputs and predicts *what anomalies could plausibly exist* in this output — for example, an unexpected spike in failure counts, a sudden drop in transaction volume, or an unusual concentration in a single region.
-
-2. **Anomaly Checker Agent** — receives the Reasoner's predictions alongside the actual query output. It evaluates whether the predicted anomalies are genuinely present in the data, filtering out false positives. Only confirmed anomalies produce a trigger.
-
-3. **Alert Generation** — for each confirmed anomaly, a structured `Alert` record is persisted to the database (severity: `HIGH`, `MEDIUM`, or `LOW`) and an email notification is immediately dispatched to the relevant user.
-
-This design ensures Scout's anomaly intelligence is always contextually grounded in the query being run — not a generic threshold check against the entire dataset.
-
-### 🧾 Data Owner Onboarding Wizard
-- Guided multi-step UI for Data Owners to register database connections (`POSTGRES` / `MYSQL`) and scan available tables
-- Column-level metadata registration with semantic descriptions
-- Toggle tables active/inactive to include or exclude them from the AI pipeline in real time
-
-### 📈 Executive Dashboard
-- Persistent dashboard cards populated from scheduled query results
-- Chart rendering with auto-inferred chart type (`BAR`, `PIE`, `TABLE`) — inferred from query result shape, no manual configuration
-- Cards persist across sessions and are visible to the user on every login
-
-### 🔑 Authentication & JWT Security
-- Registration and login with bcrypt-hashed passwords
-- JWT tokens (HS256, configurable expiry) for stateless auth
-- Role-based route guards: `PLATFORM_ADMIN`, `DATA_OWNER`, `ENTERPRISE_ANALYST`, `ANALYST`
-- Platform Admin accounts are seeded directly — never creatable via the public registration endpoint
-
-### 📬 Email Notifications (Google OAuth2 )
-- Scheduled report emails with formatted HTML output
-- Threshold breach alert emails to all team members
-- Inline anomaly alert emails dispatched per detection event
-
----
-
-## 🏗️ Architecture
-
-### High-Level System Design (HLD)
 
 <p align="center">
-  <img src="docs/HLD.png" alt="High-Level System Design Diagram" width="100%"/>
+  <img src="assets/features-preview.png" alt="Scout Features Overview" width="100%"/>
 </p>
 
-### How the Governance Boundary Works
+### Functional Requirements
 
-The `master_config` table is the security boundary of the entire system. The AI pipeline **can only see tables whose rows exist and are `is_active = TRUE` in this table**. When a Platform Admin revokes a table, the pipeline's next invocation will not find that table in its scope and will not generate SQL against it — no code change required, no restart, no cache invalidation.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology | Why We Chose It |
-|---|---|---|
-| **Frontend** | Next.js 14 (App Router) | Server components, file-based routing, production-grade SSR |
-| **Styling** | Tailwind CSS + shadcn/ui | Rapid, consistent design system with accessible components |
-| **Charts** | Recharts | React-native charting, zero config for bar/line/pie |
-| **Backend** | Python 3.11 + FastAPI | Async-first, automatic OpenAPI docs, Pydantic validation |
-| **Agent Orchestration** | LangGraph | Stateful multi-agent graph with typed state, parallel branches, conditional routing |
-| **LLM** | Groq API — Llama 3.1 70B | Fastest publicly available inference; free tier sufficient for demo volumes |
-| **LLM Client** | langchain-groq | Handles retries, streaming, rate limits automatically |
-| **Prompt Management** | langchain-core ChatPromptTemplate | Reusable, testable, separated from agent logic |
-| **Output Parsing** | langchain-core JsonOutputParser + Pydantic | Typed structured output; catches malformed LLM responses gracefully |
-| **Vector Store** | ChromaDB + langchain-chroma | File-based, no infrastructure, persistent across restarts |
-| **Embeddings** | sentence-transformers all-MiniLM-L6-v2 | Local, free, Apache 2.0, CPU-efficient, 384-dim |
-| **ORM** | SQLAlchemy 2.0 (async + sync) | Industry standard; async for API handlers, sync for pipeline agents |
-| **Migrations** | Alembic | Works seamlessly with SQLAlchemy models |
-| **Background Jobs** | APScheduler (AsyncIOScheduler) | In-process scheduler; no Redis or Celery required for hackathon scope |
-| **Database** | PostgreSQL on Neon.tech | Serverless PostgreSQL; instant setup, no credit card required |
-| **Email** | Gmail API (Google OAuth2) | Secure OAuth2 authentication; reliable HTML delivery via Gmail SMTP |
-| **Deployment — Frontend** | Vercel | One-click Next.js deployment; automatic preview builds |
-| **Deployment — Backend** | Render.com | FastAPI container deploy; free tier sufficient for demo |
+#### Multi-Persona Chat Interface
+- Users can choose their preferred communication style: **EXECUTIVE** (concise, business-friendly summaries) or **TECHNICAL** (detailed, data-rich responses)
+- Multiple named chatrooms per user with persistent history and full conversational context
+- Real-time streaming responses via Server-Sent Events — answers are generated live as you type
+- A transparent **Chain of Thought** panel accompanies every response, showing sources, SQL queries, retrieved context, intent classification, and confidence levels
 
 ---
 
-## ⚡ Install & Run
+#### Scheduled Queries (CRON-Based)
+- Define natural language queries and schedule them using standard CRON expressions
+- Flexible delivery options:
+  - **Dashboard** — persistent cards visible on login  
+  - **Email** — professionally formatted HTML reports via Gmail OAuth2  
+- Intelligent alert conditions (e.g., *"alert me if failed transactions exceed 1000"*) evaluated automatically after each run
+- Background scheduler executes every minute, ensuring reliable and duplicate-free job processing
+
+---
+
+#### Anomaly Detection & **Alerting** (Query-Coupled Intelligence)
+
+Scout’s anomaly detection is not based on static intervals. Instead, it is **tightly coupled with scheduled query execution**, ensuring all analysis is performed on fresh, real-time data.
+
+A dedicated two-agent pipeline powers this system:
+
+1. **Anomaly Reasoner Agent**  
+   Analyzes the query context, relevant tables, and live SQL results to identify potential anomalies — such as spikes in failures, drops in volume, or unusual data distributions.
+
+2. **Anomaly Checker Agent**  
+   Validates the predicted anomalies against actual results, eliminating false positives and confirming only meaningful deviations.
+
+3. **Alert Generation**  
+   Confirmed anomalies generate structured `Alert` records (severity: `HIGH`, `MEDIUM`, `LOW`) and trigger immediate email notifications.
+
+This design ensures anomaly detection remains **context-aware, precise, and actionable**, rather than relying on generic threshold-based monitoring.
+
+---
+
+#### Email Notifications (Google OAuth2)
+- Automated delivery of scheduled reports in clean, HTML format
+- Threshold-based alert emails sent to relevant stakeholders
+- Real-time anomaly alerts triggered instantly upon detection
+
+---
+
+#### Executive Dashboard
+- Persistent dashboard cards generated from scheduled query outputs
+- Automatic chart type inference (`BAR`, `PIE`, `TABLE`) based on result structure — zero manual configuration required
+- Cards persist across sessions, giving users a consistent and always-updated view of key metrics
+
+---
+
+#### Platform Admin — Central Governance & Control
+
+The **Platform Admin** acts as the central authority for data governance, ensuring secure, structured, and compliant access across the organization.
+
+- **Complete Data Visibility** — Unified access to all data tables across teams  
+- **Dynamic Table Assignment** — Real-time assignment and revocation of tables, enforced via the `master_config` governance layer  
+- **AI-Generated Semantic Definitions** — Automatic generation of business-friendly table descriptions using AI  
+- **Visual Governance Interface** — Intuitive drag-and-drop UI for managing tables and teams  
+- **One-Click Access Control** — Instant updates to data access with immediate system-wide enforcement  
+- **User Access Management** — Centralized control over users, roles, and cross-team permissions with live updates  
+
+---
+
+#### Data Owner Onboarding Wizard
+- Guided, step-by-step interface for registering database connections (`POSTGRES`) and scanning available tables
+- Column-level metadata configuration with semantic descriptions
+- Real-time table activation and deactivation for dynamic pipeline inclusion
+
+---
+
+### Non-Functional Requirements
+
+#### RAG over Unstructured Data (ChromaDB)
+- Ingests customer feedback, complaints, and support tickets using sentence-transformer embeddings (`all-MiniLM-L6-v2`)
+- Supports **HYBRID queries**, combining structured SQL results with unstructured contextual insights
+- Example:  
+  *"What are customers saying about our payment failures?"*  
+  → Returns both numerical failure metrics and real customer feedback, synthesised into a single response
+
+---
+
+#### Agentic AI Pipeline (LangGraph)
+
+A production-grade **9-node LangGraph pipeline** orchestrates every query:
+
+1. **Orchestration** — Classifies intent (`SQL_ONLY`, `RAG_ONLY`, `HYBRID`, `GENERAL`, `SCHEMA_LOOKUP`)  
+2. **Relevancy Filtering** — Identifies only the necessary tables within the user’s access scope  
+3. **SQL Generation** — Produces secure, optimized PostgreSQL `SELECT` queries  
+4. **Parallel Execution** — Runs SQL and RAG retrieval simultaneously  
+5. **Safe Execution** — Enforces strict read-only operations (`DROP`, `DELETE`, etc. are impossible)  
+6. **Retry Mechanism** — Automatically corrects and retries failed queries once  
+7. **Synthesis** — Combines structured and unstructured results into a coherent answer  
+8. **Persona Adaptation** — Formats output for EXECUTIVE or TECHNICAL users  
+9. **Chain of Thought Generation** — Logs full reasoning, sources, and execution path for transparency  
+
+---
+
+#### Authentication & JWT Security
+- Secure registration and login with bcrypt-hashed passwords  
+- Stateless authentication using JWT tokens (HS256, configurable expiry)  
+- Role-based access control: `PLATFORM_ADMIN`, `DATA_OWNER`, `ENTERPRISE_ANALYST`, `ANALYST`  
+- Platform Admin accounts are securely seeded and cannot be created via public endpoints  
+
+---
+
+## Install & Run
 
 ### Prerequisites
 
@@ -303,7 +297,7 @@ This creates the following demo accounts:
 
 ---
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Example 1 — Ask a Business Question (Executive Persona)
 
@@ -343,16 +337,16 @@ Scout will:
   <img src="assets/example-2a.jpeg" alt="Example 2A - Admin Console" width="100%"/>
 </p>
 
-**Beat 2:** Log in as the Enterprise Analyst → ask *"What is the API error rate this week?"* → Scout answers using Team B's data ✅
+**Beat 2:** Log in as the Enterprise Analyst → ask *"What is the API error rate this week?"* → Scout answers using Team B's data 
 
-**Beat 3:** Log back in as admin → Revoke Team B access from the Enterprise Analyst. Log in as Enterprise Analyst → ask the same question → Scout now answers only from Team A data. The governance boundary is enforced in real time ✅
+**Beat 3:** Log back in as admin → Revoke Team B access from the Enterprise Analyst. Log in as Enterprise Analyst → ask the same question → Scout now answers only from Team A data. The governance boundary is enforced in real time 
 
 <p align="center">
   <img src="assets/example-2b.jpeg" alt="Example 2B - Governance Boundary Enforced" width="100%"/>
 </p>
 
 
-## ⚠️ Limitations (Honest Assessment)
+## Limitations (Honest Assessment)
 
 In the spirit of full transparency:
 
@@ -365,7 +359,7 @@ In the spirit of full transparency:
 
 ---
 
-## 🚀 Future Scope
+## Future Scope
 
 These are genuine next steps we would build with additional time:
 
@@ -379,7 +373,7 @@ These are genuine next steps we would build with additional time:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Scout/
@@ -445,7 +439,7 @@ Scout/
 │           └── api-client.ts     # Typed API client for all endpoints
 │
 ├── docs/                         # Architecture & design diagrams
-│   ├── HLD.png                   # High-Level Design diagram
+│   ├── HLSD.png                  # High Level System Design diagram
 │   ├── System Architecture.png
 │   ├── Data Flow.png
 │   ├── DATABASE ERD.png
@@ -463,7 +457,7 @@ Scout/
 
 ---
 
-## 🔒 Security & Compliance Posture
+## Security & Compliance Posture
 
 Scout was designed with the NatWest security mindset from day one:
 
@@ -478,7 +472,7 @@ Scout was designed with the NatWest security mindset from day one:
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
 # From src/backend (with venv active):
@@ -491,7 +485,7 @@ Tests cover:
 
 ---
 
-## 📄 API Reference
+## API Reference
 
 Full interactive documentation is available at `http://localhost:8000/docs` when running locally.
 
@@ -511,18 +505,18 @@ Key endpoints:
 | `POST` | `/scheduled` | Create a new scheduled query |
 | `GET` | `/alerts` | List team alerts |
 | `GET` | `/dashboard/cards` | List dashboard cards |
-| `GET` | `/health` | Service health check |
 | `GET` | `/health/llm` | LLM key pool status |
 
 ---
 
-## 👥 Team
+## Team
 
 Built with intensity and conviction by **Aayush Gupta & Team** for the **NatWest Group Hackathon**.
 
 ---
 
 ## License
+
 This project is licensed under the Apache License 2.0.
 See the LICENSE file for details.
 
