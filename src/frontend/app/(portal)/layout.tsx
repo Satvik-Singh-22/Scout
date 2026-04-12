@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getMe, logout } from '@/lib/api-client';
@@ -15,6 +15,36 @@ export default function PortalLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isDark, setIsDark] = useState(false);
+
+  // Initialise dark mode from localStorage / system preference
+  useEffect(() => {
+    const stored = localStorage.getItem('scout-theme');
+    if (stored === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    } else if (stored === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('scout-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('scout-theme', 'light');
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     getMe()
@@ -129,7 +159,7 @@ export default function PortalLayout({
           <div className="flex items-center gap-1">
             <Link
               href="/alerts"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all relative"
+              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all relative"
             >
               <span className="material-symbols-outlined">notifications</span>
               {unreadCount > 0 && (
@@ -138,20 +168,32 @@ export default function PortalLayout({
             </Link>
             <Link
               href="/chat"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all"
+              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
             >
               <span className="material-symbols-outlined">chat_bubble</span>
             </Link>
             <Link
               href="/profile"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all"
+              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
             >
               <span className="material-symbols-outlined">person</span>
             </Link>
+            {/* Day / Night toggle */}
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle ml-1"
+              data-dark={isDark}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <span className="theme-toggle-thumb">
+                {isDark ? '🌙' : '☀️'}
+              </span>
+            </button>
           </div>
           <div className="h-6 w-px bg-outline-variant/30 hidden sm:block mx-1"></div>
           {/* User avatar with initials */}
-          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold border border-indigo-200 ml-1">
+          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold border border-indigo-200 dark:border-indigo-700 ml-1">
             {userInitials}
           </div>
         </div>

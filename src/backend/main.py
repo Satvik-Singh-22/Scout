@@ -97,3 +97,11 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 def health():
     """Health check endpoint for load balancers and monitoring."""
     return {"status": "ok", "service": "scout-api", "version": "1.0.0"}
+
+
+@app.get("/health/llm", tags=["System"])
+def health_llm():
+    """LLM key pool status — shows available/cooling-down keys and usage stats."""
+    from backend.agents.llm import get_rotator
+    return get_rotator().health()
+
