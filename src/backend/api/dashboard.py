@@ -1,8 +1,11 @@
 """
 Banquoite — Dashboard API
 
-Endpoints:
-  GET /dashboard/cards — return user's dashboard cards, limit 20
+ELI5 (What does this file do?):
+Think of this file as the manager of your personal bulletin board. 
+When you save an important chart or result to look at later, this file organizes it.
+Whenever you open your dashboard, this file quickly fetches all your pinned charts 
+(up to your latest 20) so you have an instant overview of your important metrics!
 """
 
 from fastapi import APIRouter, Depends

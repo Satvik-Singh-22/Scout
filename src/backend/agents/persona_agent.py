@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as the communications director or the friendly presenter.
+Once all the hard facts have been gathered, this file looks at *who* asked the question.
+If the CEO (an Executive) asked, it writes a short, punchy summary with bullet points—no nerdy details.
+If a developer (a Technical user) asked, it gives all the deep technical specifics, table names, and exact numbers.
+It essentially takes raw facts and "dresses them up" appropriately for the person reading them.
+"""
 from langchain_core.prompts import ChatPromptTemplate
 from backend.agents.llm import get_llm
 from backend.agents.state import PipelineState

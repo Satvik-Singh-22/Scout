@@ -1,11 +1,11 @@
 """
 Banquoite — Scheduled Queries API
 
-Endpoints:
-  GET   /scheduled                 — list user's scheduled queries
-  POST  /scheduled                 — create a new scheduled query
-  PATCH /scheduled/{id}            — update is_active
-  GET   /scheduled/{id}/history    — execution history for a query
+ELI5 (What does this file do?):
+Think of this file as a smart alarm clock for data!
+Instead of running a report manually every Monday morning, a user can tell this file to do it for them.
+It takes a query, looks at the schedule rule (like "every Monday at 9 AM"), and saves it. 
+It also tracks the history—letting you see all the past times the alarm went off and what the results were.
 """
 
 import uuid

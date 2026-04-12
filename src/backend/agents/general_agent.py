@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as the friendly chatbot that handles small talk and general knowledge.
+If a user says "Hello!", or asks "What does an API mean?", or "What can you do for me?", 
+they don't need us to dig through complex company databases. 
+This agent steps in, gives a helpful, direct, and conversational answer right away, 
+skipping the heavy data-crunching steps entirely to save time.
+"""
 from langchain_core.prompts import ChatPromptTemplate
 from backend.agents.state import PipelineState
 from backend.agents.llm import get_llm

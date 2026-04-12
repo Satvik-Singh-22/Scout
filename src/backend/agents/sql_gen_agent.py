@@ -1,3 +1,12 @@
+"""
+ELI5 (What does this file do?):
+Think of this as the master translator who speaks "Database."
+You talk to it in plain English ("Show me the top 5 transactions from yesterday"), 
+and it perfectly translates that into a complex SQL query (the language the database understands). 
+It knows the exact rules and grammar to ask the database for the right numbers. 
+And if the database complains that it didn't understand (a SQL error), 
+this file has a "retry" ability to look at the error, figure out the typo, and try translating it again!
+"""
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import JsonOutputParser
 from backend.agents.llm import get_llm

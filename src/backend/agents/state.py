@@ -1,3 +1,12 @@
+"""
+ELI5 (What does this file do?):
+Imagine a clipboard that gets passed along an assembly line. 
+Every worker in the line reads from this clipboard to know what the previous person did, 
+and writes down their own results before passing it on.
+This file defines exactly what pieces of paper are on that clipboard.
+It tracks the user's original question, what tables were found, what the database query was, 
+and what the final answer should sound like. It ensures no information is lost as the agents do their work.
+"""
 from typing import TypedDict, List
 
 class PipelineState(TypedDict):
