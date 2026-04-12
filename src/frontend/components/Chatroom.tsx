@@ -23,6 +23,13 @@ import { Send, Bot, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+const SUGGESTED_QUERIES = [
+  "Which API endpoints have an average response_time_ms higher than average?",
+  "Is there a correlation between latency_ms in the Tyk gateway and specific api_name values?",
+  "Which services have reported cpu_usage_pct exceeding 80% in the last hour?",
+  "Show the share of transactions by region",
+  "Which customers have unusually high refund-to-transaction ratios?"
+];
 interface Props {
   chatroomId: string;
   userPersona: 'EXECUTIVE' | 'TECHNICAL';
@@ -78,7 +85,11 @@ export default function Chatroom({
   const didAutoSend = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
 
+  useEffect(() => {
+    setRandomSuggestions([...SUGGESTED_QUERIES].sort(() => 0.5 - Math.random()).slice(0, 3));
+  }, []);
   useEffect(() => {
     setIsLoadingMessages(true);
     getMessages(chatroomId)
@@ -192,8 +203,8 @@ export default function Chatroom({
                 Ask anything about your processed data and customer insights.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-2">
-                {['Total payment volume', 'Top customer segments', 'Churn risk analysis'].map(suggestion => (
-                  <button 
+                {randomSuggestions.map(suggestion => (
+                  <button
                     key={suggestion}
                     onClick={() => handleSendQuery(suggestion)}
                     className="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm"
@@ -204,7 +215,7 @@ export default function Chatroom({
               </div>
             </div>
           )}
-          
+
           {messages.map((msg) => (
             <MessageBubble
               key={msg.id}
@@ -222,7 +233,7 @@ export default function Chatroom({
                 </div>
                 <span className="text-xs font-bold text-gray-900">Scout AI</span>
               </div>
-              
+
               <div className="w-full max-w-[85%] md:max-w-2xl bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-4 text-sm text-gray-800 shadow-sm relative">
                 {!streamingContent ? (
                   <div className="flex items-center gap-2 text-gray-400 font-medium italic">
@@ -263,11 +274,10 @@ export default function Chatroom({
                   <button
                     key={p.key}
                     onClick={() => onPersonaChange?.(p.key)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-                      userPersona === p.key 
-                        ? 'bg-indigo-600 text-white shadow-sm' 
-                        : 'text-gray-500 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${userPersona === p.key
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-gray-500 hover:bg-gray-100'
+                      }`}
                   >
                     {p.key === 'TECHNICAL' ? <DevIcon /> : <MgrIcon />}
                     {p.label}
@@ -294,7 +304,7 @@ export default function Chatroom({
               disabled={isStreaming}
               className="w-full px-4 py-3 bg-transparent text-sm focus:outline-none resize-none min-h-[52px] leading-relaxed disabled:opacity-50"
             />
-            
+
             <div className="flex items-center justify-between px-3 py-2 border-t border-gray-50">
               <span className="text-[10px] text-gray-400 font-medium italic">
                 {input.length > 0 ? `${input.length} characters` : 'Press Enter to send, Shift+Enter for new line'}

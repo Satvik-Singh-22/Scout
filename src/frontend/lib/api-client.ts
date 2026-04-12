@@ -268,6 +268,14 @@ export async function renameChatroom(chatroomId: string, name: string): Promise<
   return res.json();
 }
 
+export async function deleteChatroom(chatroomId: string): Promise<void> {
+  const res = await apiFetch(`${BASE_URL}/chatrooms/${chatroomId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to delete chatroom');
+}
+
 export async function getMessages(chatroomId: string): Promise<Message[]> {
   const res = await apiFetch(`${BASE_URL}/chatrooms/${chatroomId}/messages`, {
     headers: authHeaders(),
