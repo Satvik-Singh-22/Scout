@@ -10,55 +10,47 @@ It formats the email to look pretty and professional, slaps a stamp on it, and s
 
 import logging
 import os
-import requests
+import smtplib
 import html
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
 
-# MailerSend Configuration
-MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
-# MAILERSEND_URL = "https://api.api-client.com/v1/email" # Typical pattern, but let's use the one from the user
-MAILERSEND_URL = "https://api.mailersend.com/v1/email"
-FROM_EMAIL = "noreply@test-nrw7gym0w3kg2k8e.mlsender.net"
-FROM_NAME = "Scout"
+# SMTP Configuration (Gmail)
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER")          # your Gmail address
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")   # Gmail App Password (16-char)
+FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", SMTP_USER or "")
+FROM_NAME = os.getenv("SMTP_FROM_NAME", "Scout")
 
 def _send_email(to_email: str, subject: str, html_content: str, text_content: str = "") -> bool:
-    """Helper to send email via MailerSend API."""
-    if not MAILERSEND_API_KEY:
-        logger.warning("MAILERSEND_API_KEY not configured — email delivery disabled")
+    """Helper to send email via SMTP (Gmail)."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        logger.warning("SMTP_USER / SMTP_PASSWORD not configured — email delivery disabled")
         return False
 
-    headers = {
-        "Authorization": f"Bearer {MAILERSEND_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    msg = MIMEMultipart("alternative")
+    msg["From"] = f"{FROM_NAME} <{FROM_EMAIL}>"
+    msg["To"] = to_email
+    msg["Subject"] = subject
 
-    data = {
-        "from": {
-            "email": FROM_EMAIL,
-            "name": FROM_NAME
-        },
-        "to": [
-            {
-                "email": to_email,
-                "name": "User"
-            }
-        ],
-        "subject": subject,
-        "html": html_content,
-        "text": text_content or "Please use an HTML capable email client to view this message."
-    }
+    # Attach plain-text fallback and HTML body
+    msg.attach(MIMEText(text_content or "Please use an HTML capable email client to view this message.", "plain"))
+    msg.attach(MIMEText(html_content, "html"))
 
     try:
-        response = requests.post(MAILERSEND_URL, headers=headers, json=data, timeout=10)
-        if response.status_code in [200, 202]:
-            logger.info("Email sent successfully to %s (Status: %s)", to_email, response.status_code)
-            return True
-        else:
-            logger.error("MailerSend failed: %s - %s", response.status_code, response.text)
-            return False
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        logger.info("Email sent successfully to %s via SMTP", to_email)
+        return True
     except Exception as e:
-        logger.error("Error sending email via MailerSend: %s", e)
+        logger.error("Error sending email via SMTP: %s", e)
         return False
 
 def send_report_email(
