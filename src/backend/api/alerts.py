@@ -1,9 +1,11 @@
 """
 Banquoite — Alerts API
 
-Endpoints:
-  GET   /alerts          — return team alerts, ordered by created_at DESC, limit 50
-  PATCH /alerts/{id}/read — mark an alert as read
+ELI5 (What does this file do?):
+Think of this file as the notification center or the "inbox" for important warnings.
+When our system detects something weird in the data (an anomaly), it creates an alert.
+This file allows users to view a list of all their recent warnings and click "mark as read" 
+once they have seen it, just like managing unread emails.
 """
 
 import uuid

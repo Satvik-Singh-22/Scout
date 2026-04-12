@@ -1,8 +1,11 @@
 """
 Banquoite — Configuration API (Data Owner)
 
-Endpoints for registering database connections and managing the master_config
-security boundary. Most endpoints require the DATA_OWNER role.
+ELI5 (What does this file do?):
+Think of this file as the IT setup department for data owners.
+It allows data owners to securely plug their company's database into our app. 
+Once plugged in, it scans the database and lets the owner pick and choose exactly which tables 
+the AI is allowed to look at. This creates a strict boundary so the AI never sees private or off-limits data.
 
 Endpoints:
   POST  /config/connections        — register a new DB connection

@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as a super-fast researcher flipping through a giant filing cabinet of documents.
+When someone asks a question about customer feedback or text documents, 
+this agent dives into our special text database (ChromaDB), finds the 5 most relevant paragraphs 
+matching the question, and hands them back to the team. 
+If the question is purely about numbers (SQL_ONLY), it politely steps back and says "Not my department!"
+"""
 import logging
 from backend.agents.state import PipelineState
 from backend.vectorstore.chroma_manager import get_retriever

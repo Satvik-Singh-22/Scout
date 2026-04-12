@@ -1,14 +1,12 @@
 """
 Scout — Authentication & Authorization
 
-Endpoints:
-  POST /auth/register — create a new user account
-  POST /auth/login    — authenticate and receive JWT
-
-Dependencies (reused across all routes):
-  get_current_user()      — decode JWT, return User object
-  require_data_owner()    — enforce DATA_OWNER role
-  require_platform_admin() — enforce PLATFORM_ADMIN role
+ELI5 (What does this file do?):
+Think of this file as the bouncer at the club door. 
+When someone visits, this file handles "Registration" (checking their ID and putting them on the guest list) 
+and "Login" (handing them a VIP wristband called a JWT token). 
+It also contains the security checkpoints that say, "Wait, you need to be a Data Owner to enter this room," 
+ensuring nobody accesses data they shouldn't see.
 """
 
 import os

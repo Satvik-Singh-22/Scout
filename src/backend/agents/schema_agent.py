@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as the tour guide for our data warehouse.
+Sometimes a user isn't asking for actual numbers, but just wants to know "what kind of data do you have?"
+Instead of trying to do complicated math, this guide simply opens the catalog and describes what is available.
+For example, it will tell you, "We have a table for users, and it holds their names and emails." 
+It doesn't fetch the data itself, just the *menu* of what's possible to ask for.
+"""
 import json
 from langchain_core.prompts import ChatPromptTemplate
 from sqlalchemy import text

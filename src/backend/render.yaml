@@ -3,7 +3,7 @@
 
 services:
   - type: web
-    name: banquoite-api
+    name: scout-backend
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt

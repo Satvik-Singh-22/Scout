@@ -1,11 +1,11 @@
 """
 Banquoite — Scheduler Service
 
-Manages APScheduler background jobs:
-  1. run_due_scheduled_queries() — every 1 minute
-  2. run_anomaly_detection()     — every 15 minutes
-
-Started/stopped via the FastAPI lifespan context manager in main.py.
+ELI5 (What does this file do?):
+Think of this file as the heartbeat of our automated tasks.
+While the rest of the application waits for users to click buttons, this file runs independently 
+in the background on its own clock. Every 1 minute, it checks if any scheduled reports need to be sent out. 
+Every 15 minutes, it checks if any data anomalies have occurred. It never sleeps!
 """
 
 import logging

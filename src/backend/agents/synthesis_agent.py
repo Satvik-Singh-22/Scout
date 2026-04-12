@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as the ultimate compiler or meeting note-taker. 
+Usually, we have raw numbers from the database (like "Revenue: $5,000") and clunky text pieces from documents.
+This file takes all those puzzle pieces and mashes them together into a single, cohesive, factual draft. 
+It says, "Based on the numbers and the text we found, here is the complete factual picture." 
+It doesn't worry about being polite or sounding like an executive—it just gets the absolute facts straight.
+"""
 from langchain_core.prompts import ChatPromptTemplate
 from backend.agents.llm import get_llm
 from backend.agents.state import PipelineState

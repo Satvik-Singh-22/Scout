@@ -1,10 +1,12 @@
 """
 anomaly_checker_agent.py
 
-Takes the hypotheses produced by anomaly_reasoner_agent and verifies each one
-by executing the verification_sql against the live database.
-
-Includes a single-attempt retry mechanism for SQL syntax/execution errors.
+ELI5 (What does this file do?):
+Imagine a cautious detective who is handed a list of possible crimes (hypotheses) by the 'anomaly_reasoner'.
+This detective actually goes to the crime scene (the live database) to see if the crime really happened!
+It runs the test queries the reasoner suggested. If a query fails because of a typo, 
+this detective even knows how to fix the typo and try again. 
+If the data proves the anomaly is real (like "Yes, errors ARE above 15%"), it sounds the alarm!
 """
 
 from sqlalchemy import text

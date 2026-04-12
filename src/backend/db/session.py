@@ -1,11 +1,12 @@
 """
 Scout — Database Session Management
 
-Provides two session factories:
-  1. Async (AsyncSession) — used by FastAPI route handlers via Depends()
-  2. Sync (Session)       — used by the LangGraph agent pipeline
-
-Both derive from the same DATABASE_URL environment variable.
+ELI5 (What does this file do?):
+Imagine the database is a secure vault, and to get inside, you need a temporary visitor badge and an escort. 
+This file is the security desk that hands out those badges (called "Sessions"). 
+When the fast web application needs quick data, it gets an "Async" badge. 
+When our deep-thinking AI agents need data, they get a slightly different "Sync" badge. 
+Most importantly, when you are done getting your data, this file automatically takes the badge back and locks the vault.
 """
 
 import os

@@ -1,10 +1,10 @@
 """
 Banquoite — Anomaly Detection Service
 
-Monitors alert configurations and detects threshold breaches across
-configured metrics. Triggered by the scheduler every 15 minutes.
-
-This module is designed to be extended by Person 1's anomaly_agent.
+ELI5 (What does this file do?):
+Imagine a night watchman who walks around the factory every 15 minutes checking all the gauges.
+This file is that watchman. If a gauge (like "failed logins") goes above the safe red line (a threshold), 
+this service immediately creates an Alert and sends an email to the team so they can fix it before things break.
 """
 
 import logging
