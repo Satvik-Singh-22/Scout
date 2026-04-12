@@ -18,7 +18,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChatrooms, createChatroom, renameChatroom } from '@/lib/api-client'
+import { getChatrooms, createChatroom, renameChatroom, deleteChatroom } from '@/lib/api-client'
 import type { Chatroom } from '@/lib/api-client'
 
 function timeAgo(dateStr: string): string {
@@ -123,6 +123,18 @@ export default function ChatHubPage() {
     }
   }
 
+  const handleDeleteChat = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    if (!window.confirm('Are you sure you want to delete this chat session? This cannot be undone.')) return
+
+    try {
+      await deleteChatroom(id)
+      setChatrooms(prev => prev.filter(r => r.id !== id))
+    } catch {
+      setError('Failed to delete chat session')
+    }
+  }
+
   return (
     <div className="p-8 max-w-7xl w-full mx-auto">
       {/* Header */}
@@ -203,6 +215,13 @@ export default function ChatHubPage() {
                       title="Rename chat"
                     >
                       <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteChat(e, room.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors"
+                      title="Delete chat"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
                     </button>
                     <span className="material-symbols-outlined text-gray-300 text-[16px]">open_in_new</span>
                   </div>
