@@ -12,8 +12,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select, text
 
-from backend.db.models import Alert, AlertConfiguration
+from backend.db.models import Alert, AlertConfiguration, User
 from backend.db.session import SyncSessionLocal
+from backend.services.notification_service import send_alert_email
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,23 @@ def run_anomaly_check():
                     )
                     session.add(alert)
                     alerts_created += 1
+
+                    # Notify Team Users
+                    try:
+                        user_result = session.execute(
+                            select(User.email).where(User.team_id == config.team_id)
+                        )
+                        team_emails = user_result.scalars().all()
+                        for email in team_emails:
+                            send_alert_email(
+                                to_email=email,
+                                alert_title=alert.title,
+                                alert_description=alert.description,
+                                severity=alert.severity
+                            )
+                            print(f"[THRESHOLD ALERT] 📧 Sent email to: {email}")
+                    except Exception as email_exc:
+                        logger.error("Failed to send threshold alert emails: %s", email_exc)
 
             except Exception as exc:
                 logger.error(
