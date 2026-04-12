@@ -57,7 +57,7 @@ Available table schemas:
 {table_schemas}
 
 Rules for choosing anomalies:
-- Focus on anomalies a banking manager would care about: failure rates, spikes, 
+- Focus on anomalies a banking EXECUTIVE would care about: failure rates, spikes, 
   unusual volumes, threshold breaches, sudden drops
 - Phrase the condition as a simple comparison: metric_value > X or metric_value < X
 - Set the threshold based on what is realistic for banking data

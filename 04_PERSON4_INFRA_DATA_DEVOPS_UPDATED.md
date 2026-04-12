@@ -1038,7 +1038,7 @@ DEMO_USERS = [
         "email": "admin@banquoite.dev",
         "name": "Platform Admin",
         "password": "Admin1234!",
-        "persona": "DEVELOPER",
+        "persona": "TECHNICAL",
         "role": "PLATFORM_ADMIN",
         "team_name": None,  # PLATFORM_ADMIN has no team
     },
@@ -1046,7 +1046,7 @@ DEMO_USERS = [
         "email": "enterprise@banquoite.dev",
         "name": "Enterprise Analyst",
         "password": "Enterprise1234!",
-        "persona": "MANAGER",
+        "persona": "EXECUTIVE",
         "role": "ENTERPRISE_ANALYST",
         "team_name": "Team A — Payments",  # organisational home team
         "access_teams": ["Team A — Payments", "Team B — Operations"],
@@ -1055,7 +1055,7 @@ DEMO_USERS = [
         "email": "analyst.a@banquoite.dev",
         "name": "Analyst Team A",
         "password": "Analyst1234!",
-        "persona": "MANAGER",
+        "persona": "EXECUTIVE",
         "role": "ANALYST",
         "team_name": "Team A — Payments",
         "access_teams": ["Team A — Payments"],
@@ -1064,7 +1064,7 @@ DEMO_USERS = [
         "email": "analyst.b@banquoite.dev",
         "name": "Analyst Team B",
         "password": "Analyst1234!",
-        "persona": "DEVELOPER",
+        "persona": "TECHNICAL",
         "role": "ANALYST",
         "team_name": "Team B — Operations",
         "access_teams": ["Team B — Operations"],
@@ -1073,7 +1073,7 @@ DEMO_USERS = [
         "email": "owner.a@banquoite.dev",
         "name": "Data Owner Team A",
         "password": "Owner1234!",
-        "persona": "DEVELOPER",
+        "persona": "TECHNICAL",
         "role": "DATA_OWNER",
         "team_name": "Team A — Payments",
         "access_teams": ["Team A — Payments"],
@@ -1374,8 +1374,8 @@ curl -X POST https://banquoite-api.onrender.com/auth/login \
 ## Overview
 Banquoite is an AI-powered enterprise intelligence portal built for the NatWest "Talk to Data: Seamless Self-Service Intelligence" hackathon. It allows banking teams to ask natural language questions about segregated enterprise data and receive instant, trustworthy answers.
 
-- Non-technical Managers receive simplified explanations with charts.
-- Developers receive technical detail with SQL, table references, and execution logs.
+- Non-technical EXECUTIVEs receive simplified explanations with charts.
+- TECHNICALs receive technical detail with SQL, table references, and execution logs.
 - Enterprise Analysts can query across multiple teams' data simultaneously.
 - Every answer includes a Chain of Thought transparency layer showing exactly which data sources were used, what SQL was executed, and how the AI reasoned.
 
@@ -1394,7 +1394,7 @@ Banquoite is an AI-powered enterprise intelligence portal built for the NatWest 
 
 ## Features (Implemented)
 - Multi-agent AI pipeline: Orchestrator → Relevancy → SQL Generation → RAG → Execution → Synthesis → Persona
-- Persona-based output: Manager (simplified English, charts) and Developer (SQL, technical detail)
+- Persona-based output: EXECUTIVE (simplified English, charts) and TECHNICAL (SQL, technical detail)
 - Chain of Thought transparency panel on every answer
 - 4-tier role hierarchy: PLATFORM_ADMIN, DATA_OWNER, ENTERPRISE_ANALYST, ANALYST
 - Enterprise Data Governance: Platform Admin assigns tables to teams and controls cross-team access

@@ -71,7 +71,7 @@ export default function OnboardingConnectPage() {
             <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">Connect your Enterprise Datahub</h2>
             <p className="text-gray-500 mt-2 text-sm leading-relaxed max-w-lg">Scout needs read-only access to your central database to build semantic search capabilities.</p>
           </div>
-          
+
           <div className="p-8 bg-gray-50/50">
             {/* Options grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -81,15 +81,15 @@ export default function OnboardingConnectPage() {
                     <span className="material-symbols-outlined text-[10px] font-bold">check</span>
                   </div>
                 )}
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg" className={`w-8 h-8 transition-transform ${dbType === 'postgres' ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} alt="PostgreSQL"/>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg" className={`w-8 h-8 transition-transform ${dbType === 'postgres' ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} alt="PostgreSQL" />
                 <span className="text-xs font-bold">PostgreSQL</span>
               </button>
               <button onClick={() => setDbType('snowflake')} className={`flex flex-col items-center justify-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all ${dbType === 'snowflake' ? 'border-primary text-primary border-2' : 'border-gray-200 text-gray-500'}`}>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Snowflake_Logo.svg" className={`w-8 h-8 transition-opacity ${dbType === 'snowflake' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} alt="Snowflake"/>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Snowflake_Logo.svg" className={`w-8 h-8 transition-opacity ${dbType === 'snowflake' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} alt="Snowflake" />
                 <span className="text-xs font-bold">Snowflake</span>
               </button>
               <button onClick={() => setDbType('mysql')} className={`flex flex-col items-center justify-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all ${dbType === 'mysql' ? 'border-primary text-primary border-2' : 'border-gray-200 text-gray-500'}`}>
-                <img src="https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg" className={`w-8 h-8 transition-opacity ${dbType === 'mysql' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} alt="MySQL"/>
+                <img src="https://upload.wikimedia.org/wikipedia/en/6/62/MySQL.svg" className={`w-8 h-8 transition-opacity ${dbType === 'mysql' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} alt="MySQL" />
                 <span className="text-xs font-bold">MySQL</span>
               </button>
               <button onClick={() => setDbType('bigquery')} className={`flex flex-col items-center justify-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all ${dbType === 'bigquery' ? 'border-primary text-primary border-2' : 'border-gray-200 text-gray-500'}`}>
@@ -109,33 +109,33 @@ export default function OnboardingConnectPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Host</label>
-                  <input name="host" value={form.host} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="db.company.com"/>
+                  <input name="host" value={form.host} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="db.company.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Port</label>
-                  <input name="port" value={form.port} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="5432"/>
+                  <input name="port" value={form.port} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="5432" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Database Name</label>
-                  <input name="dbName" value={form.dbName} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="main_db"/>
+                  <input name="dbName" value={form.dbName} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="main_db" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Schema</label>
-                  <input name="schema" value={form.schema} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="public"/>
+                  <input name="schema" value={form.schema} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="public" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">Username (Read-Only required)</label>
-                <input name="username" value={form.username} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="scout_ro_user"/>
+                <input name="username" value={form.username} onChange={handleChange} type="text" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm" placeholder="scout_ro_user" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-0">Password</label>
-                  <span className="text-[10px] text-primary font-bold cursor-pointer hover:underline">Use AWS Secrets Manager instead?</span>
+                  <span className="text-[10px] text-primary font-bold cursor-pointer hover:underline">Use AWS Secrets EXECUTIVE instead?</span>
                 </div>
-                <input name="password" value={form.password} onChange={handleChange} type="password" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm font-mono"/>
+                <input name="password" value={form.password} onChange={handleChange} type="password" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none bg-white shadow-sm font-mono" />
               </div>
             </form>
 
@@ -144,7 +144,7 @@ export default function OnboardingConnectPage() {
               <p className="text-xs text-blue-700 leading-relaxed font-medium">Your credentials are encrypted at rest using AES-256. Connections are strictly enforced via TLS 1.3.</p>
             </div>
           </div>
-          
+
           <div className="p-6 border-t border-gray-100 bg-white flex justify-between items-center">
             <button className="text-gray-500 text-sm font-bold px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors">Cancel</button>
             <button onClick={handleConnect} disabled={loading} className="bg-primary text-white font-bold px-8 py-3 rounded-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50">
