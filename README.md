@@ -22,6 +22,19 @@
 
 ---
 
+## 🚀 Live Demo
+
+**Website:** [www.teamscout.xyz](https://www.teamscout.xyz)
+
+Try out the platform yourself using the following demo credentials:
+
+| Role | Email | Password |
+|---|---|---|
+| **Platform Admin** | `admin@scout.dev` | `Admin1234!` |
+| **Employee (Analyst)** | `aayush@gmail.com` | `12345678` |
+
+---
+
 ## 🌟 What Is Scout?
 
 Every day, banking teams sit on mountains of data they cannot reach. Analysts wait days for reports. Executives scan through dashboards they don't understand. Critical anomalies go undetected until it's too late.
@@ -107,7 +120,7 @@ Access revocation takes effect on the **next query** — no restart required.
 
 ### 📅 Scheduled Queries (CRON-Based)
 - Users define natural language queries to run on a schedule using standard CRON expressions
-- Delivery option: **Dashboard** (creates a persistent card visible on login) or **Email** (HTML formatted report sent via Resend)
+- Delivery option: **Dashboard** (creates a persistent card visible on login) or **Email** (HTML formatted report sent via Gmail OAuth2)
 - Alert conditions: schedule a query with an optional English-language alert condition (e.g., *"alert me if failed transactions exceed 1000"*) — the LLM evaluates the result against the condition after every run and sends an email if triggered
 - Background job runs every 1 minute and claims due queries atomically to prevent duplicate execution
 
@@ -132,7 +145,7 @@ This design ensures Scout's anomaly intelligence is always contextually grounded
 
 ### 📈 Executive Dashboard
 - Persistent dashboard cards populated from scheduled query results
-- Chart rendering with auto-inferred chart type (`BAR`, `LINE`, `PIE`, `TABLE`) — inferred from query result shape, no manual configuration
+- Chart rendering with auto-inferred chart type (`BAR`, `PIE`, `TABLE`) — inferred from query result shape, no manual configuration
 - Cards persist across sessions and are visible to the user on every login
 
 ### 🔑 Authentication & JWT Security
@@ -141,7 +154,7 @@ This design ensures Scout's anomaly intelligence is always contextually grounded
 - Role-based route guards: `PLATFORM_ADMIN`, `DATA_OWNER`, `ENTERPRISE_ANALYST`, `ANALYST`
 - Platform Admin accounts are seeded directly — never creatable via the public registration endpoint
 
-### 📬 Email Notifications (Resend)
+### 📬 Email Notifications (Google OAuth2 )
 - Scheduled report emails with formatted HTML output
 - Threshold breach alert emails to all team members
 - Inline anomaly alert emails dispatched per detection event
@@ -152,50 +165,9 @@ This design ensures Scout's anomaly intelligence is always contextually grounded
 
 ### High-Level System Design (HLD)
 
-> 📌 **HLD Diagram Placeholder** — A detailed architecture diagram (including frontend, backend, agent pipeline graph, database layer, and background job orchestration) will be placed here.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     NEXT.JS FRONTEND                    │
-│  Chat · Dashboard · Alerts · Scheduled · Admin · Auth   │
-└───────────────────────────┬─────────────────────────────┘
-                            │ REST + SSE (JWT Auth)
-┌───────────────────────────▼─────────────────────────────┐
-│                   FASTAPI BACKEND                        │
-│  /auth  /chatrooms  /config  /admin  /scheduled         │
-│  /alerts  /dashboard  /users                            │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │             LANGGRAPH AGENT PIPELINE             │   │
-│  │                                                  │   │
-│  │  [Orchestrator] → route by intent                │   │
-│  │       ↓ GENERAL/SCHEMA_LOOKUP → short circuit    │   │
-│  │  [Relevancy] → filter to permitted tables        │   │
-│  │       ↓ (parallel)                               │   │
-│  │  [SQL Gen] ──────── [RAG Agent]                  │   │
-│  │       ↓                   ↓                      │   │
-│  │  [Execution] ←retry─ [SQL Retry]                 │   │
-│  │       ↓                   ↓                      │   │
-│  │  [Synthesis] ← merges SQL + RAG                  │   │
-│  │       ↓                                          │   │
-│  │  [Persona] → EXECUTIVE or TECHNICAL answer       │   │
-│  └──────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │        APSCHEDULER BACKGROUND JOBS               │   │
-│  │  every 1 min → Scheduled Query Execution         │   │
-│  │      └─► on success → Anomaly Reasoner Agent     │   │
-│  │                    → Anomaly Checker Agent        │   │
-│  │                    → Alert + Email if triggered   │   │
-│  └──────────────────────────────────────────────────┘   │
-└───────────┬──────────────────────┬──────────────────────┘
-            │                      │
-┌───────────▼──────────┐  ┌────────▼───────────────────┐
-│   PostgreSQL (Neon)  │  │   ChromaDB (Vector Store)  │
-│   12 app tables      │  │   sentence-transformers    │
-│   40 mock data tables│  │   (all-MiniLM-L6-v2)       │
-└──────────────────────┘  └────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/HLD.png" alt="High-Level System Design Diagram" width="100%"/>
+</p>
 
 ### How the Governance Boundary Works
 
@@ -222,7 +194,7 @@ The `master_config` table is the security boundary of the entire system. The AI 
 | **Migrations** | Alembic | Works seamlessly with SQLAlchemy models |
 | **Background Jobs** | APScheduler (AsyncIOScheduler) | In-process scheduler; no Redis or Celery required for hackathon scope |
 | **Database** | PostgreSQL on Neon.tech | Serverless PostgreSQL; instant setup, no credit card required |
-| **Email** | Resend Python SDK | 3,000 free emails/month; 2-minute setup; reliable HTML delivery |
+| **Email** | Gmail API (Google OAuth2) | Secure OAuth2 authentication; reliable HTML delivery via Gmail SMTP |
 | **Deployment — Frontend** | Vercel | One-click Next.js deployment; automatic preview builds |
 | **Deployment — Backend** | Render.com | FastAPI container deploy; free tier sufficient for demo |
 
@@ -235,7 +207,7 @@ The `master_config` table is the security boundary of the entire system. The AI 
 - **Python** 3.10 or higher
 - **Node.js** 18 or higher
 - A **PostgreSQL** database (we recommend [Neon.tech](https://neon.tech) — free, no credit card)
-- A **Groq API Key** (free at [console.groq.com](https://console.groq.com))
+- **Groq API Keys** — one or more (free at [console.groq.com](https://console.groq.com))
 
 ---
 
@@ -273,15 +245,14 @@ Now open `.env` and fill in your values:
 
 ```bash
 DATABASE_URL=postgresql+asyncpg://user:password@host/dbname
-GROQ_API_KEY=gsk_your_key_here
+GROQ_API_KEYS=gsk_key1,gsk_key2,gsk_key3   # Comma-separated pool of Groq API keys
+GROQ_API_KEY=gsk_key
 JWT_SECRET=your-minimum-32-character-secret-key
-RESEND_API_KEY=re_your_key_here        # Optional — for email delivery
+GMAIL_API_KEY=your_gmail_api_key_here       # Optional — for email delivery via Gmail
 CHROMA_PERSIST_PATH=./chroma_data
 ```
 
 ```bash
-# Run database migrations (creates all 12 application tables)
-alembic upgrade head
 
 # Start the API server
 uvicorn main:app --reload --port 8000
@@ -326,11 +297,9 @@ This creates the following demo accounts:
 
 | Email | Password | Role | Capabilities |
 |---|---|---|---|
-| `admin@banquoite.dev` | `Admin1234!` | Platform Admin | Full governance console, all 40 tables |
-| `enterprise@banquoite.dev` | `Enterprise1234!` | Enterprise Analyst | Cross-team queries (Team A + Team B) |
-| `analyst.a@banquoite.dev` | `Analyst1234!` | Analyst | Team A (Payments) only |
-| `analyst.b@banquoite.dev` | `Analyst1234!` | Analyst | Team B (Operations) only |
-| `owner.a@banquoite.dev` | `Owner1234!` | Data Owner | Team A table management |
+| `admin@scout.dev` | `Admin1234!` | Platform Admin | Full governance console, all 40 tables |
+| `analyst.a@scout.dev` | `Analyst1234!` | Analyst | Team A (Payments) only |
+| `owner.a@scout.dev` | `Owner1234!` | Data Owner | Team A table management |
 
 ---
 
@@ -338,7 +307,7 @@ This creates the following demo accounts:
 
 ### Example 1 — Ask a Business Question (Executive Persona)
 
-Log in as `analyst.a@banquoite.dev`. Open Chat. Ask:
+Log in as `analyst.a@scout.dev`. Open Chat. Ask:
 
 > *"Why did payment failures spike last Tuesday?"*
 
@@ -359,48 +328,17 @@ Scout will:
 }
 ```
 
----
 
-### Example 2 — Cross-Team Query (Enterprise Analyst)
+### Example 2 — Governance Demo (3-Beat Sequence)
 
-Log in as `enterprise@banquoite.dev`. Ask:
+**Beat 1:** Log in as `admin@scout.dev` → Admin Console → Assign `mock_api_gateway_logs` to Team B. Grant an Enterprise Analyst access to Team B.
 
-> *"Did the API gateway spike last Tuesday cause the increase in payment failures?"*
-
-Scout will:
-- Classify intent as `HYBRID`
-- Fetch tables from **both** Team A (Payments) and Team B (Operations) simultaneously
-- Join `mock_api_gateway_logs` error counts with `mock_failed_transactions` timestamps
-- Synthesise a single answer correlating both datasets
-
----
-
-### Example 3 — Governance Demo (3-Beat Sequence)
-
-**Beat 1:** Log in as `admin@banquoite.dev` → Admin Console → Assign `mock_api_gateway_logs` to Team B. Grant `enterprise@banquoite.dev` access to Team B.
-
-**Beat 2:** Log in as `enterprise@banquoite.dev` → ask *"What is the API error rate this week?"* → Scout answers using Team B's data ✅
+**Beat 2:** Log in as the Enterprise Analyst → ask *"What is the API error rate this week?"* → Scout answers using Team B's data ✅
 
 **Beat 3:** Log back in as admin → Revoke Team B access from the Enterprise Analyst. Log in as Enterprise Analyst → ask the same question → Scout now answers only from Team A data. The governance boundary is enforced in real time ✅
 
----
 
-### Example 4 — Schedule a Recurring Report
-
-Go to **Scheduled Queries** → Create new:
-
-```
-Query: "What is today's total payment volume and failure rate?"
-CRON: 0 9 * * 1-5      (weekdays at 9am)
-Delivery: Email
-Alert condition: "Alert me if the failure rate exceeds 5%"
-```
-
-Every weekday morning, Scout runs the query, emails the result, and emails an alert if the failure threshold is breached — all autonomously.
-
----
-
-### Example 5 — Hybrid RAG Query
+### Example 3 — Hybrid RAG Query
 
 Ask:
 
@@ -418,11 +356,8 @@ In the spirit of full transparency:
 
 | Feature | Status |
 |---|---|
-| Alert configuration UI (creating new thresholds in-app) | **Partial** — thresholds are seeded via script (`seed_alerts.py`); the UI to create/edit alert configurations is not implemented |
-| Multi-database encryption for stored connection strings | **Partial** — connection strings are stored as plaintext with an `_enc` column name; production encryption is not implemented in this version |
 | MYSQL database connections | **Defined in schema** — `db_type` accepts `MYSQL` but the pipeline currently executes against PostgreSQL only |
 | Semantic caching of repeated queries | **Not implemented** — every query invokes the full LangGraph pipeline; response caching would reduce LLM costs in production |
-| Alert configuration management UI | **Not implemented** — `alert_configurations` rows must be seeded; there is no admin UI to create or edit them |
 | Vector store ingestion UI | **Not implemented** — ChromaDB is pre-populated via a script (`vectorstore/ingest.py`); Data Owners cannot upload documents through the UI |
 | Fine-grained column-level access control | **Not implemented** — governance operates at the table level; column-level restrictions are not enforced |
 
@@ -478,7 +413,7 @@ Scout/
 │   │   ├── services/
 │   │   │   ├── scheduler_service.py  # APScheduler + job logic
 │   │   │   ├── anomaly_service.py    # Threshold breach detection
-│   │   │   └── notification_service.py  # Resend email dispatch
+│   │   │   └── notification_service.py  # Gmail OAuth2 email dispatch
 │   │   ├── vectorstore/
 │   │   │   └── ingest.py         # ChromaDB ingestion script
 │   │   ├── scripts/              # Data seeding scripts
@@ -507,12 +442,18 @@ Scout/
 │       └── lib/
 │           └── api-client.ts     # Typed API client for all endpoints
 │
-├── docs/                         # Full technical documentation
-│   ├── 00_MASTER_SHARED_CONTEXT_FINAL.md
-│   ├── 01_PERSON1_AI_AGENT_ENGINEER.md
-│   ├── 02_PERSON2_BACKEND_ENGINEER.md
-│   ├── 03_PERSON3_FRONTEND_ENGINEER.md
-│   └── 04_PERSON4_INFRA_DATA_DEVOPS_UPDATED.md
+├── docs/                         # Architecture & design diagrams
+│   ├── HLD.png                   # High-Level Design diagram
+│   ├── System Architecture.png
+│   ├── Data Flow.png
+│   ├── DATABASE ERD.png
+│   ├── API ENDPOINT MAP.png
+│   ├── LANGGRAPH AGENT PIPELINE.png
+│   ├── ROLE & GOVERNANCE MODEL.png
+│   ├── DEPLOYMENT ARCHITECTURE.png
+│   ├── DEVELOPMENT TIMELINE.png
+│   ├── SEQUENCE DIAGRAM — CHAT QUERY END-TO-END.png
+│   └── SEQUENCE DIAGRAM — GOVERNANCE 3-BEAT DEMO.png
 ├── chroma_data/                  # Persisted ChromaDB vector embeddings
 ├── requirements.txt
 └── README.md
@@ -542,7 +483,9 @@ Scout was designed with the NatWest security mindset from day one:
 pytest tests/ -v
 ```
 
-Tests cover: orchestrator agent intent classification, SQL generation correctness, relevancy filtering, and execution agent read-only enforcement.
+Tests cover:
+- **Agent Tests** — orchestrator agent intent classification, SQL generation correctness, relevancy filtering, and execution agent read-only enforcement
+- **API Tests** — endpoint validation for authentication, chatroom CRUD, admin governance operations, scheduled query management, alert retrieval, and dashboard card listing
 
 ---
 
