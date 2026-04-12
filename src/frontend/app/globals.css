@@ -6,6 +6,12 @@
   body {
     @apply bg-background text-on-surface font-body antialiased;
   }
+
+  /* Dark mode overrides for semantic colors */
+  .dark body,
+  .dark {
+    --tw-bg-opacity: 1;
+  }
 }
 
 .material-symbols-outlined {
@@ -26,4 +32,54 @@
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #c3c0ff;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+    background: #3f3d56;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #58579b;
+}
+
+/* ------------------------------------------------------------------ */
+/* Day/Night Toggle Switch                                            */
+/* ------------------------------------------------------------------ */
+.theme-toggle {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    border-radius: 9999px;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: linear-gradient(135deg, #87CEEB, #FDB813);
+    transition: background 0.4s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle[data-dark="true"] {
+    background: linear-gradient(135deg, #1a1a2e, #2d2b55);
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.theme-toggle[data-dark="true"] .theme-toggle-thumb {
+    transform: translateX(24px);
+    background: #1e1b4b;
 }
