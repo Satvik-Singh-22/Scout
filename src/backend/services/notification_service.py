@@ -1,7 +1,11 @@
 """
 Banquoite — Notification Service
 
-Sends email notifications for scheduled report deliveries and alerts using MailerSend.
+ELI5 (What does this file do?):
+Think of this file as the company postman. 
+Whenever someone needs to receive an email—whether it's a regular weekly report or an urgent 
+warning that the database is failing—our system gives the message to this file. 
+It formats the email to look pretty and professional, slaps a stamp on it, and sends it out to the user's inbox securely.
 """
 
 import logging

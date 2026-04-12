@@ -1,8 +1,11 @@
 """
 Scout — SQLAlchemy ORM Models
 
-All 12 core application tables as defined in the Master Shared Context (Section 5).
-Uses PostgreSQL-specific types (UUID, JSONB) with timezone-aware timestamps.
+ELI5 (What does this file do?):
+Think of this file as the master blueprint for the entire database. 
+It defines the exact shape and size of every "box" (table) we use to store data—like Teams, Users, Alerts, and Chat Messages. 
+It makes sure that if you try to put a date in a text box, the database says "No way!" 
+By looking at this file, you can easily see how all the different parts of our app connect to each other.
 """
 
 import uuid

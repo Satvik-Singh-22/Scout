@@ -1,3 +1,12 @@
+"""
+ELI5 (What does this file do?):
+Think of this as the intelligent sorting hat or the head dispatcher. 
+When a user asks a question, this guy is the very first to look at it. 
+It doesn't answer the question but figures out *what kind* of question it is.
+Is it a general hello? Do they need specific numbers from the database? Or just reading some text files?
+Based on this read, it stamps a label (like "SQL_ONLY" or "GENERAL") on the question, 
+so the rest of the factory knows exactly how to handle it.
+"""
 import json
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate

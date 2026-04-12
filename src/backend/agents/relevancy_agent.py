@@ -1,3 +1,12 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as a smart librarian inside our data warehouse.
+When you ask a question like "how many customers complained last month?", 
+this librarian quickly scans the index of all available data tables and says, 
+"Aha! You don't need to look at everything; you only need the 'customer_complaints' table."
+By narrowing down the focus to only the relevant info, it prevents the team from 
+getting confused by useless data and speeds up the process significantly.
+"""
 import json
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate

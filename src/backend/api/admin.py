@@ -1,6 +1,12 @@
 """
 Banquoite — Platform Admin API
 
+ELI5 (What does this file do?):
+Think of this file as the master control room for the entire system's security.
+It's an exclusive area only "Platform Admins" can enter. From here, they can see every single database table
+and team in the company. They can assign a data table to a specific team (giving them the key to access it)
+or revoke it (changing the locks). They can also grant special "Enterprise Analysts" access to multiple teams at once.
+
 Governance endpoints for PLATFORM_ADMIN users. Controls table assignments
 to teams, cross-team access grants, and provides full estate visibility.
 

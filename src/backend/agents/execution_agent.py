@@ -1,3 +1,11 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as the rigorous security guard and the fetcher combined.
+After the translator (sql_gen_agent) writes a database query, this guard checks it to make sure it's safe. 
+It ensures NO ONE accidentally tells the database to "DELETE everything" (it blocks dangerous commands).
+If the query passes the security check, this guard takes it, runs into the actual database vault, 
+grabs the rows of data requested, and brings them back for the team to read.
+"""
 from sqlalchemy import text
 from backend.db.session import get_sync_session
 from backend.agents.state import PipelineState

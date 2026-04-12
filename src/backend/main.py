@@ -1,11 +1,13 @@
 """
 Scout — FastAPI Application Entry Point
 
-Initialises the FastAPI application with:
-  - Lifespan-managed background scheduler (start/stop)
-  - CORS middleware for frontend communication
-  - All API routers mounted at their correct prefixes
-  - Health check endpoint
+ELI5 (What does this file do?):
+Think of this file as the front door and the receptionist of our application. 
+When anyone (like the frontend web app) wants to talk to our backend services, they knock here first. 
+This file sets up the main application, turns on the background workers (like taking out the trash on a schedule), 
+opens up the communication channels so the web app can safely talk to the backend, 
+and organizes all the different "departments" (like authentication, chat, and admin) so requests go to the right place. 
+It also keeps a quick health check to let the outside world know, "Hey, I'm alive and working!"
 """
 
 import logging

@@ -1,9 +1,11 @@
 """
 Banquoite — Users API
 
-Endpoints:
-  GET   /users/me — return current user with accessible teams
-  PATCH /users/me — update persona or name
+ELI5 (What does this file do?):
+Think of this file as the profile page and directory for employees.
+It lets a user ask, "Who am I?" (fetching their own name, role, and settings), 
+and lets them update things like whether they want the AI to talk to them like an Executive or a Technical person. 
+It also lets them ask, "Who else is on my team?" to see a list of their colleagues and their roles.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status

@@ -1,15 +1,13 @@
 """
 anomaly_reasoner_agent.py
 
-Given a user's query, the relevant tables (with their schema from master_config),
-and a sample of the SQL results, this agent reasons about what anomalies COULD
-plausibly exist in the data. It returns at most 2 structured hypotheses.
-
-Each hypothesis includes:
-  - A plain-English description of the potential anomaly
-  - A verification SQL query that would CONFIRM the anomaly if executed
-  - A condition to evaluate the result (e.g. "rate > 0.15", "count > 1000")
-  - The severity if confirmed
+ELI5 (What does this file do?):
+Imagine a highly suspicious auditor looking over the results of a normal report. 
+When a user asks for a regular chart, this agent peeks at the same data and asks, 
+"Wait, could something be going horribly wrong here behind the scenes?"
+It brainstorms up to 2 "Hypotheses" (like, "What if the failure rate is secretly spiking?"). 
+It then writes down the exact math test (a SQL query and a condition) needed to prove 
+if that bad thing is actually happening. It doesn't run the test; it just builds the theory!
 """
 
 import json

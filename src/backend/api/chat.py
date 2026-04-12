@@ -1,7 +1,11 @@
 """
 Banquoite — Chat API
 
-The most critical file — connects the frontend to Person 1's agent pipeline.
+ELI5 (What does this file do?):
+This is the most critical file—it's the telephone wire between the user's screen and our AI factory.
+When a user types a question and hits send, this file receives it, saves it to the chat history, 
+and hands it over to the AI Agents (the pipeline). As the AI figures out the answer, 
+this file continuously streams the words back to the user's screen letter-by-letter so it feels fast and interactive.
 
 Endpoints:
   GET  /chatrooms                        — list user's chatrooms

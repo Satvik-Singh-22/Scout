@@ -1,3 +1,13 @@
+"""
+ELI5 (What does this file do?):
+Imagine a factory assembly line, but for answering questions instead of building cars. 
+This file builds and manages that assembly line, which we call a "pipeline." 
+When a user asks a question, this file decides the exact step-by-step path the question should take. 
+For example, it steps from the "Orchestrator" (who decides what kind of question it is), 
+to "Relevancy" (who finds the right data charts), 
+to "SQL Gen" (who writes the database query), and finally to "Persona" (who frames the final answer perfectly). 
+It decides who does what, and in what order, ensuring smooth teamwork.
+"""
 from langgraph.graph import StateGraph, END
 from backend.agents.state import PipelineState
 from backend.agents.orchestrator_agent import orchestrator_agent

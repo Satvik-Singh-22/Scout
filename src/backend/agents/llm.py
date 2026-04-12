@@ -1,3 +1,12 @@
+"""
+ELI5 (What does this file do?):
+Think of this file as our application's "brain connection manager".
+Whenever our agents need to "think" using AI (the Large Language Model or LLM), they ask this file.
+This file securely manages the key cards (API keys) that let us talk to the heavy-lifting AI (Groq cloud).
+If one key card gets jammed because we are thinking too fast (rate limited), 
+it seamlessly swaps to the next key card. And if the cloud is completely down, 
+it has a backup plan to use a smaller, local brain on our own computer (Ollama).
+"""
 import os
 import logging
 import threading
