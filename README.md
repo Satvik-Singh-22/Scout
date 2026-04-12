@@ -311,6 +311,12 @@ Log in as `analyst.a@scout.dev`. Open Chat. Ask:
 
 > *"Why did payment failures spike last Tuesday?"*
 
+<br/>
+<p align="center">
+  <img src="assets/example-1.jpeg" alt="Example 1 - Business Question" width="100%"/>
+</p>
+<br/>
+
 Scout will:
 - Classify intent as `SQL_ONLY`
 - Identify relevant tables: `mock_failed_transactions`, `mock_payment_events`
@@ -333,22 +339,18 @@ Scout will:
 
 **Beat 1:** Log in as `admin@scout.dev` → Admin Console → Assign `mock_api_gateway_logs` to Team B. Grant an Enterprise Analyst access to Team B.
 
+<p align="center">
+  <img src="assets/example-2a.jpeg" alt="Example 2A - Admin Console" width="100%"/>
+</p>
+
 **Beat 2:** Log in as the Enterprise Analyst → ask *"What is the API error rate this week?"* → Scout answers using Team B's data ✅
 
 **Beat 3:** Log back in as admin → Revoke Team B access from the Enterprise Analyst. Log in as Enterprise Analyst → ask the same question → Scout now answers only from Team A data. The governance boundary is enforced in real time ✅
 
+<p align="center">
+  <img src="assets/example-2b.jpeg" alt="Example 2B - Governance Boundary Enforced" width="100%"/>
+</p>
 
-### Example 3 — Hybrid RAG Query
-
-Ask:
-
-> *"What are customers saying about payment failures, and how many failures occurred this month?"*
-
-Scout will run SQL for the failure count **and** retrieve complaint text from ChromaDB in parallel, then synthesise:
-
-> *"This month recorded 2,847 payment failures (+18% vs last month). Customer feedback consistently highlights frustration with timeout errors during peak hours, particularly on weekend evenings. Three recurring themes: slow error recovery, lack of real-time status updates, and unhelpful error messages."*
-
----
 
 ## ⚠️ Limitations (Honest Assessment)
 
