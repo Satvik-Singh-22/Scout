@@ -1,4 +1,4 @@
-# BANQUOITE — COMPLETE PITCH
+# SCOUT — COMPLETE PITCH
 ## Read this aloud. Every word is meant to be spoken.
 
 ---
@@ -7,7 +7,7 @@
 
 Let me start by painting a picture of the problem.
 
-Imagine you are a manager at NatWest. You need to answer one question — something as straightforward as "Why did our transaction failure rate spike last Tuesday?" You know the answer is sitting somewhere in the data. But to get it, you have to raise a ticket with the data team, wait two or three days, get back a spreadsheet you cannot fully read, and by the time you have your answer, the problem has already cost the bank money and the moment to act has passed.
+Imagine you are a EXECUTIVE at NatWest. You need to answer one question — something as straightforward as "Why did our transaction failure rate spike last Tuesday?" You know the answer is sitting somewhere in the data. But to get it, you have to raise a ticket with the data team, wait two or three days, get back a spreadsheet you cannot fully read, and by the time you have your answer, the problem has already cost the bank money and the moment to act has passed.
 
 Now imagine the data team is not slow because they are incompetent. They are slow because this is genuinely hard. NatWest has dozens of internal teams — Payments, Operations, Risk, Customer, Finance — and each team's data is intentionally segregated from the others. A payments analyst cannot see the operations team's logs. A risk analyst cannot see the customer team's accounts. The walls are there for compliance reasons, for regulatory reasons, for good reasons. But those walls also mean that getting a cross-domain answer — "Did the API latency spike on Tuesday cause the payment failures on Tuesday?" — requires coordinating across multiple teams, multiple data owners, multiple approval chains.
 
@@ -17,19 +17,19 @@ That is the problem we are solving.
 
 ---
 
-## THE PRODUCT — WHAT IS BANQUOITE?
+## THE PRODUCT — WHAT IS SCOUT?
 
-We built **Banquoite**. It is an enterprise AI portal designed specifically for NatWest's internal banking teams.
+We built **Scout**. It is an enterprise AI portal designed specifically for NatWest's internal banking teams.
 
 The core idea is simple: any employee, regardless of their technical skill level, should be able to type a question in plain English and get a trustworthy, instant answer — drawn from the actual enterprise data that is relevant to their role.
 
-A non-technical manager types: *"What is our transaction failure rate this week compared to last week, broken down by region?"* They get back a clean, readable English answer with a bar chart. No SQL. No spreadsheets. No waiting.
+A non-technical EXECUTIVE types: *"What is our transaction failure rate this week compared to last week, broken down by region?"* They get back a clean, readable English answer with a bar chart. No SQL. No spreadsheets. No waiting.
 
-A developer types: *"Show me API gateway error rates by service for the past seven days."* They get back the same answer, but with the SQL that was executed, the exact tables that were queried, and the reasoning the AI used — so they can verify every step.
+A TECHNICAL types: *"Show me API gateway error rates by service for the past seven days."* They get back the same answer, but with the SQL that was executed, the exact tables that were queried, and the reasoning the AI used — so they can verify every step.
 
 And critically — a senior enterprise analyst who has been granted access to multiple teams' data can ask a question that spans both the Payments domain and the Operations domain simultaneously and get a single synthesized answer that joins both data streams together. That has never been possible before without a week of coordination.
 
-That is Banquoite.
+That is Scout.
 
 ---
 
@@ -38,10 +38,10 @@ That is Banquoite.
 NatWest judged this challenge on three criteria. Let me address each directly.
 
 **Pillar one: Clarity.**
-Every answer Banquoite gives is tailored to who is asking. We have two modes — Manager mode and Developer mode. A Manager gets a plain English explanation, a chart, and a one-sentence summary. A Developer gets the SQL that was executed, the table names, the row counts, and the agent's reasoning chain. The same underlying answer, delivered in the language that person actually needs. No one is ever shown a raw database dump and asked to interpret it themselves.
+Every answer Scout gives is tailored to who is asking. We have two modes — EXECUTIVE mode and TECHNICAL mode. A EXECUTIVE gets a plain English explanation, a chart, and a one-sentence summary. A TECHNICAL gets the SQL that was executed, the table names, the row counts, and the agent's reasoning chain. The same underlying answer, delivered in the language that person actually needs. No one is ever shown a raw database dump and asked to interpret it themselves.
 
 **Pillar two: Trust.**
-This is where we go further than any generic AI product. Every single answer Banquoite gives is accompanied by what we call the Chain of Thought panel. It shows the user exactly which data sources were considered, exactly which tables were actually used, exactly what SQL was executed against those tables, how many rows came back, and which parts of the answer came from structured data versus unstructured text. Nothing is hidden. Nothing is a black box. The user can see, step by step, how the AI arrived at its answer and decide whether to trust it.
+This is where we go further than any generic AI product. Every single answer Scout gives is accompanied by what we call the Chain of Thought panel. It shows the user exactly which data sources were considered, exactly which tables were actually used, exactly what SQL was executed against those tables, how many rows came back, and which parts of the answer came from structured data versus unstructured text. Nothing is hidden. Nothing is a black box. The user can see, step by step, how the AI arrived at its answer and decide whether to trust it.
 
 Beyond that, the entire system is built on a governance model. Data Owners — one per team — control which of their tables the AI is even allowed to access. They register their tables through a self-service interface, write human-readable descriptions of what each table contains, and can toggle any table on or off at any moment. If a table is toggled off, the AI immediately stops using it. No redeployment. No code change. Instant.
 
@@ -60,9 +60,9 @@ Most AI tools treat data access as a binary: you either have access to everythin
 
 **Tier one: ANALYST.** This is the default role. An Analyst belongs to one team and can only query that team's assigned tables. If they are on the Payments team, they see payment data. They cannot see operations logs, risk flags, or customer records. The wall is enforced at the AI pipeline level, not just at the UI level — the AI literally does not know those other tables exist for that user.
 
-**Tier two: DATA_OWNER.** One per team. They can register their team's database tables through a self-service onboarding wizard — no developer involvement required. They write the semantic definitions that tell the AI what each table means in plain English. And they can revoke access to any table at any time.
+**Tier two: DATA_OWNER.** One per team. They can register their team's database tables through a self-service onboarding wizard — no TECHNICAL involvement required. They write the semantic definitions that tell the AI what each table means in plain English. And they can revoke access to any table at any time.
 
-**Tier three: ENTERPRISE_ANALYST.** This is the role you would give to a senior manager or a Head of Business Intelligence — someone whose decisions require synthesizing data from multiple domains. The Platform Admin explicitly grants them access to, say, Team A's payment data and Team B's operations data. When that person asks a question, the AI pulls from both domains simultaneously, writes SQL that joins across those domains if needed, and gives a single unified answer. No one else on either team can do that. It is explicitly granted, explicitly controlled, and instantly revocable.
+**Tier three: ENTERPRISE_ANALYST.** This is the role you would give to a senior EXECUTIVE or a Head of Business Intelligence — someone whose decisions require synthesizing data from multiple domains. The Platform Admin explicitly grants them access to, say, Team A's payment data and Team B's operations data. When that person asks a question, the AI pulls from both domains simultaneously, writes SQL that joins across those domains if needed, and gives a single unified answer. No one else on either team can do that. It is explicitly granted, explicitly controlled, and instantly revocable.
 
 **Tier four: PLATFORM_ADMIN.** This person sits above all teams. They see all 40 tables in the system. They decide which tables each team can access. They decide who gets cross-team access. They can revoke any permission from any user in real time. This is the Data Governance function that enterprise banks actually have — we just made it a live, interactive part of the product.
 
@@ -86,7 +86,7 @@ The user types a question. That question goes to our backend, which is a Python 
 
 **Agent six: the Synthesis Agent.** It takes the SQL results, the retrieved text chunks, and weaves them into a single coherent narrative context.
 
-**Agent seven: the Persona Agent.** It takes that narrative and formats the final answer based on who is asking. Manager mode: plain English, chart data, no jargon. Developer mode: full SQL, table names, row counts, technical detail. It also builds the complete Chain of Thought object that appears in the transparency panel.
+**Agent seven: the Persona Agent.** It takes that narrative and formats the final answer based on who is asking. EXECUTIVE mode: plain English, chart data, no jargon. TECHNICAL mode: full SQL, table names, row counts, technical detail. It also builds the complete Chain of Thought object that appears in the transparency panel.
 
 That entire pipeline — all seven agents — runs in under ten seconds for most queries.
 
@@ -110,9 +110,9 @@ All forty tables are registered in our governance system, assigned to their resp
 
 ## THE PROACTIVE FEATURES
 
-Beyond answering questions, Banquoite also monitors your data proactively.
+Beyond answering questions, Scout also monitors your data proactively.
 
-We have an anomaly detection system that runs on a schedule using APScheduler. It checks key metrics — transaction failure rates, API latency percentiles — against configured thresholds. When a threshold is breached, it generates an alert automatically. The Alert Center in the UI shows these pre-detected anomalies so a manager sees them the moment they log in, without having to ask.
+We have an anomaly detection system that runs on a schedule using APScheduler. It checks key metrics — transaction failure rates, API latency percentiles — against configured thresholds. When a threshold is breached, it generates an alert automatically. The Alert Center in the UI shows these pre-detected anomalies so a EXECUTIVE sees them the moment they log in, without having to ask.
 
 We also have a scheduled query feature. A user can set up a recurring query — for example, "Send me a daily transaction summary every morning at nine." The system runs that query on schedule, saves the result, and either delivers it to the user's dashboard or sends it by email. This means the data comes to the user instead of the user having to remember to ask.
 
@@ -156,7 +156,7 @@ The governance model we built — the four-tier role hierarchy, the master confi
 
 And the core user experience — type a question, get a trustworthy, transparent, instant answer — is exactly what NatWest's employees need to make faster, better decisions without depending on a data team queue that moves at the speed of a ticket system.
 
-That is Banquoite. Thank you.
+That is Scout. Thank you.
 
 ---
 

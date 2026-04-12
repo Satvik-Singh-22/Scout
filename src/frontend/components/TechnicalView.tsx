@@ -8,10 +8,10 @@ interface Props {
 }
 
 /**
- * Developer-facing view of an AI response.
+ * Technical user facing view of an AI response.
  * Shows raw SQL, full schema details, RAG chunks, and technical agent path.
  */
-export default function DeveloperView({ content, cot }: Props) {
+export default function TechnicalView({ content, cot }: Props) {
   const [sqlCopied, setSqlCopied] = useState(false)
 
   const copySQL = async () => {
@@ -62,9 +62,8 @@ export default function DeveloperView({ content, cot }: Props) {
             <div className="bg-gray-50 border border-gray-100 rounded-lg p-3">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Confidence</span>
               <div className="mt-1">
-                <span className={`inline-block text-xs px-2 py-0.5 rounded font-semibold ${
-                  cot.confidence === 'high' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
+                <span className={`inline-block text-xs px-2 py-0.5 rounded font-semibold ${cot.confidence === 'high' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
                   {cot.confidence.toUpperCase()}
                 </span>
               </div>

@@ -64,7 +64,7 @@ class User(Base):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint(
-            "persona IN ('MANAGER', 'DEVELOPER')",
+            "persona IN ('EXECUTIVE', 'TECHNICAL')",
             name="ck_users_persona",
         ),
         CheckConstraint(

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getMe, logout } from '@/lib/api-client';
@@ -15,6 +15,36 @@ export default function PortalLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isDark, setIsDark] = useState(false);
+
+  // Initialise dark mode from localStorage / system preference
+  useEffect(() => {
+    const stored = localStorage.getItem('scout-theme');
+    if (stored === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    } else if (stored === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('scout-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('scout-theme', 'light');
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     getMe()
@@ -64,16 +94,10 @@ export default function PortalLayout({
     ...(user?.role === 'PLATFORM_ADMIN'
       ? [{ href: '/admin', label: 'Governance', icon: 'shield_locked' }]
       : []),
-    { href: '/settings', label: 'Settings', icon: 'settings' },
+    { href: '/profile', label: 'Profile', icon: 'person' },
   ];
 
   const topNavLinks = [
-    ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/chat', label: 'Chat' }]
-      : []),
-    ...(user?.role !== 'PLATFORM_ADMIN'
-      ? [{ href: '/dashboard', label: 'Dashboard' }]
-      : []),
     ...(user?.role === 'PLATFORM_ADMIN'
       ? [{ href: '/admin', label: 'Admin' }]
       : []),
@@ -101,14 +125,7 @@ export default function PortalLayout({
             href={user?.role === 'PLATFORM_ADMIN' ? '/admin' : '/chat'}
             className="flex items-center gap-2"
           >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-              }}
-            >
-              <span className="font-bold text-sm">S</span>
-            </div>
+            <img src="/scout_icon.svg" alt="Scout Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
               Scout
             </span>
@@ -127,31 +144,47 @@ export default function PortalLayout({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
+            {user?.role !== 'PLATFORM_ADMIN' && (
+              <>
+                <Link
+                  href="/alerts"
+                  className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all relative"
+                >
+                  <span className="material-symbols-outlined">notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </Link>
+                <Link
+                  href="/chat"
+                  className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
+                >
+                  <span className="material-symbols-outlined">chat_bubble</span>
+                </Link>
+              </>
+            )}
             <Link
-              href="/alerts"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all relative"
+              href="/profile"
+              className="p-2 text-on-surface-variant dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all"
             >
-              <span className="material-symbols-outlined">notifications</span>
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
+              <span className="material-symbols-outlined">person</span>
             </Link>
-            <Link
-              href="/chat"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all"
+            {/* Day / Night toggle */}
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle ml-1"
+              data-dark={isDark}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              <span className="material-symbols-outlined">chat_bubble</span>
-            </Link>
-            <Link
-              href="/settings"
-              className="p-2 text-on-surface-variant hover:bg-gray-50 rounded-full transition-all"
-            >
-              <span className="material-symbols-outlined">settings</span>
-            </Link>
+              <span className="theme-toggle-thumb">
+                {isDark ? '🌙' : '☀️'}
+              </span>
+            </button>
           </div>
           <div className="h-6 w-px bg-outline-variant/30 hidden sm:block mx-1"></div>
           {/* User avatar with initials */}
-          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold border border-indigo-200 ml-1">
+          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold border border-indigo-200 dark:border-indigo-700 ml-1">
             {userInitials}
           </div>
         </div>
@@ -161,14 +194,7 @@ export default function PortalLayout({
         {/* SideNavBar */}
         <aside className="bg-gray-50 dark:bg-gray-950 w-64 fixed left-0 top-16 bottom-0 hidden md:flex flex-col p-4 gap-2 border-r border-outline-variant/10 z-30 font-inter text-sm font-medium">
           <div className="flex items-center gap-3 px-2 py-3 mb-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-              }}
-            >
-              <span className="font-bold font-manrope">S</span>
-            </div>
+            <img src="/scout_icon.svg" alt="Scout Logo" className="w-8 h-8 object-contain" />
             <div>
               <div className="text-lg font-bold font-manrope text-emerald-600 leading-tight">
                 Scout

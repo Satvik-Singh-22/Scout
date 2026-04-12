@@ -13,7 +13,7 @@ class TestPersonaAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "What is the status of our systems over the week?",
             "user_id": "test",
-            "user_persona": "DEVELOPER",
+            "user_persona": "TECHNICAL",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",
@@ -28,7 +28,7 @@ class TestPersonaAgent(unittest.TestCase):
             "chain_of_thought": {}
         }
         
-        print("Testing Developer Persona formatting...")
+        print("Testing TECHNICAL Persona formatting...")
         result = persona_agent(state)
         
         print("Final Answer:")

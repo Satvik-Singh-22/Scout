@@ -5,7 +5,7 @@ const MOCK_USER = {
   id: 'user-1',
   email: 'demo@bank.com',
   name: 'Demo User',
-  persona: 'MANAGER' as const,
+  persona: 'EXECUTIVE' as const,
   role: 'ANALYST' as const,
   team_id: 'team-a',
   accessible_teams: [{ team_id: 'team-a', team_name: 'Team A — Payments' }]
@@ -15,7 +15,7 @@ const MOCK_ADMIN_USER = {
   id: 'admin-1',
   email: 'admin@scout.dev',
   name: 'Platform Admin',
-  persona: 'MANAGER' as const,
+  persona: 'EXECUTIVE' as const,
   role: 'PLATFORM_ADMIN' as const,
   team_id: null,
   accessible_teams: []
@@ -26,7 +26,7 @@ let activeUser: {
   id: string
   email: string
   name: string
-  persona: 'MANAGER' | 'DEVELOPER'
+  persona: 'EXECUTIVE' | 'TECHNICAL'
   role: string
   team_id: string | null
   accessible_teams: { team_id: string; team_name: string }[]
@@ -52,7 +52,7 @@ export const handlers = [
       id: 'user-' + Date.now(),
       email: body.email || 'new@bank.com',
       name: body.name || 'New User',
-      persona: (body.persona as 'MANAGER' | 'DEVELOPER') || 'MANAGER',
+      persona: (body.persona as 'EXECUTIVE' | 'TECHNICAL') || 'EXECUTIVE',
       role: (body.role as 'ANALYST' | 'DATA_OWNER' | 'ENTERPRISE_ANALYST') || 'ANALYST',
       team_id: 'team-a',
       accessible_teams: [{ team_id: 'team-a', team_name: body.team_name || 'Default Team' }]

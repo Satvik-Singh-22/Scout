@@ -72,7 +72,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # ---------------------------------------------------------------------------
-# Context manager: sync session for the agent pipeline
+# Context Manager: sync session for the agent pipeline
 # ---------------------------------------------------------------------------
 @contextmanager
 def get_sync_session() -> Generator[Session, None, None]:

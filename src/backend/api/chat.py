@@ -134,7 +134,7 @@ class SendMessageRequest(BaseModel):
     """Request body for sending a message to the pipeline."""
 
     query: str = Field(..., min_length=1, max_length=5000)
-    persona: str | None = Field(None, pattern="^(MANAGER|DEVELOPER)$")
+    persona: str | None = Field(None, pattern="^(EXECUTIVE|TECHNICAL)$")
 
 
 # ---------------------------------------------------------------------------

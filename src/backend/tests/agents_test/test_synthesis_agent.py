@@ -13,7 +13,7 @@ class TestSynthesisAgent(unittest.TestCase):
         state: PipelineState = {
             "user_query": "Did complaints rise when transactions failed?",
             "user_id": "test",
-            "user_persona": "DEVELOPER",
+            "user_persona": "TECHNICAL",
             "team_id": "team-a",
             "allowed_team_ids": ["team-a"],
             "current_date": "2025-01-01",

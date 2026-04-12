@@ -530,7 +530,7 @@ curl https://banquoite-api.onrender.com/health
 # Banquoite — Talk to Data
 
 ## Overview
-Banquoite is an AI-powered enterprise intelligence portal built for the NatWest "Talk to Data" hackathon. It allows banking teams to ask natural language questions about segregated enterprise data and receive instant, trustworthy answers. Non-technical managers receive simplified explanations with charts. Developers receive technical detail with SQL, table references, and logs. Every answer includes a Chain of Thought transparency layer showing exactly which data sources were used.
+Banquoite is an AI-powered enterprise intelligence portal built for the NatWest "Talk to Data" hackathon. It allows banking teams to ask natural language questions about segregated enterprise data and receive instant, trustworthy answers. Non-technical EXECUTIVEs receive simplified explanations with charts. TECHNICALs receive technical detail with SQL, table references, and logs. Every answer includes a Chain of Thought transparency layer showing exactly which data sources were used.
 
 ## Live Demo
 - Frontend: [your-vercel-url.vercel.app]
@@ -538,7 +538,7 @@ Banquoite is an AI-powered enterprise intelligence portal built for the NatWest 
 
 ## Features (Implemented)
 - Multi-agent AI pipeline (Orchestrator → Relevancy → SQL Generation → RAG → Execution → Synthesis → Persona)
-- Persona-based output: Manager (simplified, charts) and Developer (SQL, technical detail)
+- Persona-based output: EXECUTIVE (simplified, charts) and TECHNICAL (SQL, technical detail)
 - Chain of Thought transparency on every answer
 - Self-service onboarding: Data Owners register databases and configure table access
 - Data segregation: AI only accesses tables explicitly approved per team
@@ -600,10 +600,10 @@ npm run dev
 
 ## Usage Examples
 
-**Ask a business question (Manager persona):**
+**Ask a business question (EXECUTIVE persona):**
 > "Why did revenue drop last month?"
 
-**Ask a technical question (Developer persona):**
+**Ask a technical question (TECHNICAL persona):**
 > "Show me API gateway error rates by service for the past 7 days"
 
 **Scheduled report:**

@@ -7,10 +7,10 @@ interface Props {
 }
 
 /**
- * Manager-facing view of an AI response.
+ * Executive-facing view of an AI response.
  * Shows executive summary with key metrics highlighted and simplified visuals.
  */
-export default function ManagerDashboard({ content, cot }: Props) {
+export default function ExecutiveDashboard({ content, cot }: Props) {
   return (
     <div className="space-y-4">
       {/* Executive summary */}

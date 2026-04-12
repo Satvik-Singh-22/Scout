@@ -95,19 +95,19 @@ TEST_CHATROOM_ID = "259e8113-8484-4e0e-8f01-f807e895b535"
 DEMO_USERS = {
     "analyst_a": {
         "user_id":        "aaaa0000-0000-0000-0000-000000000001",
-        "user_persona":   "MANAGER",
+        "user_persona":   "EXECUTIVE",
         "team_id":        TEAM_A_ID,
         "allowed_team_ids": [TEAM_A_ID],          # ANALYST — own team only
     },
     "analyst_b": {
         "user_id":        "bbbb0000-0000-0000-0000-000000000002",
-        "user_persona":   "DEVELOPER",
+        "user_persona":   "TECHNICAL",
         "team_id":        TEAM_B_ID,
         "allowed_team_ids": [TEAM_B_ID],
     },
     "enterprise": {
         "user_id":        "eeee0000-0000-0000-0000-000000000003",
-        "user_persona":   "DEVELOPER",
+        "user_persona":   "TECHNICAL",
         "team_id":        TEAM_A_ID,
         "allowed_team_ids": [TEAM_A_ID, TEAM_B_ID],  # Cross-team access
     },
@@ -120,7 +120,7 @@ DEMO_USERS = {
 TEST_SCENARIOS = [
     # {
     #     "id":        "UC1",
-    #     "desc":      "Use Case 1 — Understand what changed (Manager, Team A)",
+    #     "desc":      "Use Case 1 — Understand what changed (EXECUTIVE, Team A)",
     #     "user":      "analyst_a",
     #     "query":     "Why did transaction failures spike last Tuesday?",
     #     "expect_intent": "SQL_ONLY",
@@ -130,7 +130,7 @@ TEST_SCENARIOS = [
     # },
     # {
     #     "id":        "UC2",
-    #     "desc":      "Use Case 2 — Compare regions (Developer, Team A)",
+    #     "desc":      "Use Case 2 — Compare regions (TECHNICAL, Team A)",
     #     "user":      "analyst_a",
     #     "query":     "Compare successful vs failed payments in the North vs South region this month",
     #     "expect_intent": "SQL_ONLY",
@@ -139,7 +139,7 @@ TEST_SCENARIOS = [
     # },
     # {
     #     "id":        "UC3",
-    #     "desc":      "Use Case 3 — Breakdown by merchant category (Manager, Team A)",
+    #     "desc":      "Use Case 3 — Breakdown by merchant category (EXECUTIVE, Team A)",
     #     "user":      "analyst_a",
     #     "query":     "Show me the breakdown of total transaction volume by merchant category this quarter",
     #     "expect_intent": "SQL_ONLY",

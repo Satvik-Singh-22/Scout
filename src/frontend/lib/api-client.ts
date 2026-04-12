@@ -35,7 +35,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  persona: 'MANAGER' | 'DEVELOPER';
+  persona: 'EXECUTIVE' | 'TECHNICAL';
   role: 'DATA_OWNER' | 'ANALYST' | 'PLATFORM_ADMIN' | 'ENTERPRISE_ANALYST';
   team_id: string | null;
   accessible_teams: { team_id: string; team_name: string }[];
@@ -186,13 +186,13 @@ export async function getMe(): Promise<User> {
   return res.json();
 }
 
-export async function updateMe(payload: { persona?: string; name?: string }) {
+export async function updateMe(payload: { persona?: string; name?: string; team_id?: string }) {
   const res = await apiFetch(`${BASE_URL}/users/me`, {
     method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Failed to update settings');
+  if (!res.ok) throw new Error('Failed to update profile');
   return res.json();
 }
 
@@ -200,7 +200,7 @@ export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  persona: 'MANAGER' | 'DEVELOPER';
+  persona: 'EXECUTIVE' | 'TECHNICAL';
   role: string;
   created_at: string;
 }
@@ -265,7 +265,7 @@ export async function getMessages(chatroomId: string): Promise<Message[]> {
 export function streamMessage(
   chatroomId: string,
   query: string,
-  persona: 'MANAGER' | 'DEVELOPER',
+  persona: 'EXECUTIVE' | 'TECHNICAL',
   onChunk: (text: string) => void,
   onDone: (cot: ChainOfThought) => void,
   onError: (err: string) => void,
