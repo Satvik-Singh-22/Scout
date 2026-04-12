@@ -24,16 +24,13 @@ Classify the user's question into exactly one of 5 intents.
 
 Available data types:
 1. STRUCTURED (SQL): Transaction records, payment events, API logs, system metrics, financial data.
-2. UNSTRUCTURED (RAG): Customer reviews, complaint text, support ticket descriptions.
-3. SCHEMA: Table names, column names, what data is available, what a table contains.
-4. GENERAL: Greetings, explanations, definitions, questions about how the system works, anything not about data.
+2. SCHEMA: Table names, column names, what data is available, what a table contains.
+3. GENERAL: Greetings, explanations, definitions, questions about how the system works, anything not about data.
 
 Intent rules — pick the FIRST one that matches:
 - GENERAL: question is a greeting, a definition request, a "how does X work" question, or has nothing to do with banking data. No data access needed at all.
 - SCHEMA_LOOKUP: user asks what tables exist, what columns a table has, what data is available, "do you have data about X", "what can you tell me about Y table". Needs table awareness but NO query execution. If a question asks BOTH about schema AND about actual data values, classify as SQL_ONLY.
 - SQL_ONLY: needs exact numbers, aggregations, comparisons, trends, time-series from structured tables.
-- RAG_ONLY: asks what customers said, sentiment, complaint themes, free text.
-- HYBRID: needs both numerical data AND customer text together.
 
 Prior conversation context:
 {previous_query_block}
@@ -44,6 +41,10 @@ Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|RAG_ONLY|HYBRID|GENERAL|SCHE
 """),
     ("human", "User question: {user_query}")
 ])
+
+# 2. UNSTRUCTURED (RAG): Customer reviews, complaint text, support ticket descriptions.
+# - RAG_ONLY: asks what customers said, sentiment, complaint themes, free text.
+# - HYBRID: needs both numerical data AND customer text together.
 
 def orchestrator_agent(state: PipelineState) -> dict:
     previous_query = state.get("previous_query", "")
