@@ -183,10 +183,6 @@ export default function AdminPage() {
                 {message}
               </div>
             )}
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-600 font-semibold text-sm rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-              <span className="material-symbols-outlined text-[18px]">schedule</span>
-              Audit Logs
-            </button>
             <button
               onClick={saveAssignments}
               disabled={saving}
