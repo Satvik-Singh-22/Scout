@@ -1,4 +1,3 @@
-from openpyxl.worksheet.dimensions import RowDimension
 import sys
 import os
 import unittest
