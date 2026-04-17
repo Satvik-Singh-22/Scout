@@ -89,9 +89,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",   # Next.js dev server
-        "http://localhost:3001",   # alt Next.js port
+        "http://localhost:3000",
+        "http://localhost:3001",
         "http://127.0.0.1:3000",
+        "https://scout-eight-rho.vercel.app", 
     ],
     allow_credentials=True,
     allow_methods=["*"],
