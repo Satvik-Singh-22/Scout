@@ -83,7 +83,7 @@ In a modern bank, data is siloed across teams, roles and systems. The status loo
 ---
 
 <p align="center">
-  <img src="assets/features-preview.png" alt="Scout Features Overview" width="100%"/>
+  <img src="assets/features-previews.png" alt="Scout Features Overview" width="100%"/>
 </p>
 
 ### Functional Requirements
@@ -160,15 +160,6 @@ The **Platform Admin** acts as the central authority for data governance, ensuri
 ---
 
 ### Non-Functional Requirements
-
-#### RAG over Unstructured Data (ChromaDB)
-- Ingests customer feedback, complaints, and support tickets using sentence-transformer embeddings (`all-MiniLM-L6-v2`)
-- Supports **HYBRID queries**, combining structured SQL results with unstructured contextual insights
-- Example:  
-  *"What are customers saying about our payment failures?"*  
-  → Returns both numerical failure metrics and real customer feedback, synthesised into a single response
-
----
 
 ---
 #### Agentic AI Pipeline (LangGraph)
