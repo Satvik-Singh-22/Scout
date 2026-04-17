@@ -56,20 +56,40 @@ def format_rag_chunks(chunks: list) -> str:
     return formatted
 
 def synthesis_agent(state: PipelineState) -> dict:
-    # If there is no data to synthesize, return an empty context
-    if not state.get("sql_results") and not state.get("rag_chunks"):
+    sql_results = state.get("sql_results", [])
+    rag_chunks = state.get("rag_chunks", [])
+    exec_error = state.get("execution_error", "") or state.get("sql_error", "")
+    generated_sql = state.get("generated_sql", "")
+
+    if not sql_results and not rag_chunks:
+        print("[DEBUG] SYNTHESIS AGENT — No data to synthesize.")
+        print(f"  sql_results empty: {not sql_results}")
+        print(f"  rag_chunks empty: {not rag_chunks}")
+        print(f"  generated_sql: {generated_sql[:80] if generated_sql else 'None'}")
+        print(f"  execution_error: {exec_error[:80] if exec_error else 'None'}")
+
+        if generated_sql in ("NO_SCHEMA_AVAILABLE", ""):
+            return {
+                "synthesized_context": (
+                    "No relevant database tables were found for this query. "
+                    "The tables referenced in the question may not be configured "
+                    "or accessible for your team."
+                )
+            }
+        if exec_error:
+            return {"synthesized_context": f"SQL execution failed: {exec_error}"}
         return {"synthesized_context": "No relevant data found for the query."}
 
-    sql_str = format_sql_results(state.get("sql_results", []))
-    rag_str = format_rag_chunks(state.get("rag_chunks", []))
+    sql_str = format_sql_results(sql_results)
+    rag_str = format_rag_chunks(rag_chunks)
     
     llm = get_llm(temperature=0)
     chain = SYNTHESIS_PROMPT | llm
+    print("[DEBUG] SYNTHESIS AGENT")
     
     result = chain.invoke({
         "user_query": state["user_query"],
         "sql_results": sql_str,
         "rag_chunks": rag_str
     })
-    print("[DEBUG] SYNTHESIS AGENT")
     return {"synthesized_context": result.content}

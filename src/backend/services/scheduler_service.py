@@ -22,6 +22,7 @@ in the background on its own clock. Every 1 minute, it checks if any scheduled r
 Every 15 minutes, it checks if any data anomalies have occurred. It never sleeps!
 """
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 
@@ -46,6 +47,12 @@ logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
+# ---------------------------------------------------------------------------
+# Phase 3 — Async Semaphore: limits concurrent Groq API calls to 2 at a time.
+# Module-level so it is shared across all scheduler invocations in this process.
+# ---------------------------------------------------------------------------
+SCHEDULER_SEMAPHORE = asyncio.Semaphore(2)
+
 
 def start_scheduler():
     """
@@ -59,6 +66,7 @@ def start_scheduler():
             minutes=1,
             id="scheduled_queries_runner",
             replace_existing=True,
+            jitter=45,
         )
         scheduler.add_job(
             run_anomaly_detection,
@@ -66,6 +74,7 @@ def start_scheduler():
             minutes=15,
             id="anomaly_detection_runner",
             replace_existing=True,
+            jitter=45,
         )
         scheduler.start()
         logger.info("Background scheduler started with 2 jobs")
@@ -90,15 +99,15 @@ async def run_due_scheduled_queries():
     """
     Check for scheduled queries whose next_run_at <= now and execute them.
 
-    For each due query:
-      1. CLAIM the query by advancing next_run_at immediately (prevents duplicates)
-      2. Build PipelineState with query_text as user_query
-      3. Run pipeline.invoke() synchronously
-      4. Save result to scheduled_reports table
-      5. If delivery == 'DASHBOARD': create dashboard_card record
-      6. If delivery == 'EMAIL': call notification_service.send_report_email()
-      7. Evaluate alert condition via LLM if configured
-      8. Update last_run_at
+    Phase 3 architecture — Async Concurrent Execution:
+      - All due queries are executed concurrently via asyncio.gather().
+      - A module-level asyncio.Semaphore(2) limits simultaneous Groq API calls
+        to 2 at any time, preventing RPM/TPM spike bursts.
+      - Each pipeline.invoke() runs in a thread pool via asyncio.to_thread() so
+        the synchronous LangGraph pipeline does not block the event loop.
+      - return_exceptions=True ensures one failing query does not cancel others.
+
+    Original sequential steps are preserved per-query (claim → pipeline → save).
     """
     if SyncSessionLocal is None:
         return
@@ -156,51 +165,68 @@ async def run_due_scheduled_queries():
         for row in access_result.all():
             access_by_user[row.user_id].append(str(row.team_id))
 
-        # ── STEP 3: Execute each claimed query ──
-        for sq in due_queries:
+        # ── STEP 3: Define the async worker for a single scheduled query ──
+        async def process_single_query(sq: ScheduledQuery) -> None:
+            """
+            Inner worker executed concurrently for each due query.
+
+            The asyncio.Semaphore wraps ONLY the pipeline.invoke() call
+            (the actual Groq API round-trip) so pre/post-processing steps
+            such as DB reads, email delivery, and alert creation run freely
+            without consuming quota.
+            """
             if not sq.is_active:
-                continue
+                return
 
             print(f"\n[SCHEDULER] 🔔 Picking up scheduled query: '{sq.query_text[:100]}...' (ID: {sq.id})")
 
+            # Look up user from batch cache
+            user = users_by_id.get(sq.user_id)
+            if not user:
+                logger.warning("No user found for scheduled query %s (user_id=%s)", sq.id, sq.user_id)
+                return
+
+            # Look up access from batch cache
+            access_team_ids = access_by_user.get(user.id, [])
+
+            state = {
+                "user_query": sq.query_text,
+                "user_id": str(user.id),
+                "user_persona": user.persona,
+                "team_id": str(user.team_id) if user.team_id else "",
+                "allowed_team_ids": access_team_ids,
+                "current_date": now.date().isoformat(),
+                "query_intent": "",
+                "routing_decision": {},
+                "relevant_tables": [],
+                "generated_sql": "",
+                "sql_results": [],
+                "rag_chunks": [],
+                "synthesized_context": "",
+                "final_answer": "",
+                "chain_of_thought": {},
+            }
+
+            # ── Semaphore-controlled pipeline invocation ──
+            # The semaphore limits to 2 simultaneous Groq API calls.
+            # asyncio.to_thread offloads the synchronous pipeline to a thread
+            # so the event loop is never blocked.
             try:
-                # Look up user from batch cache
-                user = users_by_id.get(sq.user_id)
-                if not user:
-                    continue
+                from backend.agents.pipeline import pipeline
 
-                # Look up access from batch cache
-                access_team_ids = access_by_user.get(user.id, [])
+                async with SCHEDULER_SEMAPHORE:
+                    result_state = await asyncio.to_thread(pipeline.invoke, state)
 
-                # Try to invoke the pipeline
-                try:
-                    from backend.agents.pipeline import pipeline
+                answer = result_state.get("final_answer", "Pipeline returned no answer")
+                report_status = "SUCCESS"
+            except Exception as pipeline_exc:
+                logger.error("Pipeline error for scheduled query %s: %s", sq.id, pipeline_exc)
+                answer = f"Pipeline error: {str(pipeline_exc)}"
+                report_status = "FAILED"
+                result_state = {}
 
-                    state = {
-                        "user_query": sq.query_text,
-                        "user_id": str(user.id),
-                        "user_persona": user.persona,
-                        "team_id": str(user.team_id) if user.team_id else "",
-                        "allowed_team_ids": access_team_ids,
-                        "current_date": now.date().isoformat(),
-                        "query_intent": "",
-                        "routing_decision": {},
-                        "relevant_tables": [],
-                        "generated_sql": "",
-                        "sql_results": [],
-                        "rag_chunks": [],
-                        "synthesized_context": "",
-                        "final_answer": "",
-                        "chain_of_thought": {},
-                    }
-                    result_state = pipeline.invoke(state)
-                    answer = result_state.get("final_answer", "Pipeline returned no answer")
-                    report_status = "SUCCESS"
-                except Exception as pipeline_exc:
-                    logger.error("Pipeline error for scheduled query %s: %s", sq.id, pipeline_exc)
-                    answer = f"Pipeline error: {str(pipeline_exc)}"
-                    report_status = "FAILED"
-
+            # All post-processing (DB writes, email, alerts) runs outside the semaphore
+            try:
                 # Save report
                 report = ScheduledReport(
                     scheduled_query_id=sq.id,
@@ -294,10 +320,10 @@ async def run_due_scheduled_queries():
                 if report_status == "SUCCESS":
                     sql_results = result_state.get("sql_results", [])
                     relevant_tables = result_state.get("relevant_tables", [])
-                    
+
                     if sql_results and relevant_tables:
                         logger.info("Triggering inline anomaly check for query %s", sq.id)
-                        
+
                         # Step 1: Reasoner — what anomalies COULD exist?
                         reasoner_output = anomaly_reasoner_agent(
                             user_query=sq.query_text,
@@ -306,14 +332,14 @@ async def run_due_scheduled_queries():
                             team_id=str(user.team_id),
                             current_date=now.date().isoformat(),
                         )
-                        
+
                         # Step 2: Checker — do they actually exist?
                         if reasoner_output:
                             confirmed_alerts = anomaly_checker_agent(
                                 reasoner_output=reasoner_output,
                                 team_id=str(user.team_id),
                             )
-                            
+
                             for alert_data in confirmed_alerts:
                                 alert = Alert(
                                     team_id=user.team_id,
@@ -343,8 +369,16 @@ async def run_due_scheduled_queries():
                 logger.info("Executed scheduled query %s — status: %s", sq.id, report_status)
 
             except Exception as exc:
-                logger.error("Error processing scheduled query %s: %s", sq.id, exc, exc_info=True)
-                session.rollback()
+                logger.error("Error in post-processing for scheduled query %s: %s", sq.id, exc, exc_info=True)
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+
+        # ── STEP 4: Execute all workers concurrently ──
+        # return_exceptions=True ensures one failure does not cancel other tasks.
+        tasks = [process_single_query(sq) for sq in due_queries]
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     except Exception as exc:
         logger.error("Scheduled queries runner error: %s", exc, exc_info=True)
