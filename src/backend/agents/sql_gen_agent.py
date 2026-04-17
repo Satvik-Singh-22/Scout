@@ -21,18 +21,47 @@ It knows the exact rules and grammar to ask the database for the right numbers.
 And if the database complains that it didn't understand (a SQL error), 
 this file has a "retry" ability to look at the error, figure out the typo, and try translating it again!
 """
+import logging
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import JsonOutputParser
 from backend.agents.llm import get_llm
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from backend.agents.state import PipelineState
 from backend.db.session import get_sync_session
 from langchain_core.prompts import ChatPromptTemplate
+from backend.cache.query_cache import get_cached_sql, set_cached_sql
 import json
+
+_cache_logger = logging.getLogger(__name__)
 
 class SQLGenOutput(BaseModel):
     sql: str = Field(description="The generated PostgreSQL SELECT query")
     tables_used: list[str] = Field(description="List of table names actually referenced in the SQL")
+
+
+def _normalize_columns_metadata(raw_columns) -> list[dict]:
+    """
+    Normalize columns_metadata from DB drivers that may return list, dict, or JSON string.
+    """
+    if isinstance(raw_columns, list):
+        return [col for col in raw_columns if isinstance(col, dict)]
+
+    if isinstance(raw_columns, dict):
+        maybe_columns = raw_columns.get("columns")
+        if isinstance(maybe_columns, list):
+            return [col for col in maybe_columns if isinstance(col, dict)]
+        if "name" in raw_columns and "type" in raw_columns:
+            return [raw_columns]
+        return []
+
+    if isinstance(raw_columns, str):
+        try:
+            parsed = json.loads(raw_columns)
+        except Exception:
+            return []
+        return _normalize_columns_metadata(parsed)
+
+    return []
 
 def parse_sql_output(raw: str) -> str:
     """Fallback parser if LLM doesn't return clean JSON (rare with JSON mode)."""
@@ -52,6 +81,7 @@ Today's date is {current_date}.
 Rules:
 - Return ONLY a JSON object. No explanation outside the JSON.
 - Format: {{"sql": "SELECT ...", "tables_used": ["table1", "table2"]}}
+- CRITICAL: You will be provided with database schemas. If the schema list is empty, DO NOT GUESS table or column names. You must immediately output the exact string: NO_SCHEMA_AVAILABLE.
 - Only use SELECT statements. Never UPDATE, DELETE, INSERT, DROP, CREATE.
 - Only reference tables listed in the schema below.
 - When user says "last month", "this week", "yesterday" — resolve to exact dates using {current_date}.
@@ -70,8 +100,33 @@ Database schema:
 ])
 
 def sql_gen_agent(state: PipelineState) -> dict:
+    print(
+        f"[DEBUG] SQL GEN AGENT START — intent={state['query_intent']}, "
+        f"relevant_tables={state.get('relevant_tables', [])}"
+    )
     if state["query_intent"] == "RAG_ONLY" or not state["relevant_tables"]:
-        return {"generated_sql": "", "sql_tables_used": []}
+        print("[DEBUG] SQL GEN AGENT — Early exit: RAG_ONLY or no relevant_tables")
+        return {"generated_sql": "NO_SCHEMA_AVAILABLE", "sql_tables_used": []}
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Phase 2: Exact-match cache check — avoids redundant Groq API calls
+    # for recurring scheduled queries or identical follow-up questions.
+    # Uses MD5 hash of the normalised query; intentionally NOT semantic
+    # similarity to preserve temporal precision ("last week" ≠ "this week").
+    # ──────────────────────────────────────────────────────────────────────
+    user_query = state["user_query"]
+    cached_sql = get_cached_sql(user_query)
+    if cached_sql is not None and cached_sql.strip() and cached_sql.strip() != "NO_SCHEMA_AVAILABLE":
+        _cache_logger.debug("Cache HIT for query: %s...", user_query[:50])
+        print(f"[DEBUG] SQL GEN AGENT — Cache HIT, skipping Groq call")
+        # Derive tables_used from the relevant_tables already resolved by relevancy_agent
+        valid_tables = [t.lower() for t in state["relevant_tables"]]
+        return {
+            "generated_sql": cached_sql,
+            "sql_tables_used": valid_tables,
+        }
+    if cached_sql is not None and (not cached_sql.strip() or cached_sql.strip() == "NO_SCHEMA_AVAILABLE"):
+        _cache_logger.debug("Cache BYPASS for query %s due to empty/NO_SCHEMA_AVAILABLE entry", user_query[:50])
         
     team_ids = state.get("allowed_team_ids", [])
     if not team_ids:
@@ -82,12 +137,25 @@ def sql_gen_agent(state: PipelineState) -> dict:
     try:
         with get_sync_session() as session:
             # Query the master config table
-            query = text("SELECT table_name, columns_metadata FROM master_config WHERE table_name IN :tables AND team_id IN :team_ids")
-            result = session.execute(query, {"tables": tuple(state["relevant_tables"]), "team_ids": tuple(team_ids)})
+            query = text(
+                "SELECT table_name, columns_metadata FROM master_config "
+                "WHERE LOWER(table_name) IN :tables AND team_id IN :team_ids"
+            ).bindparams(
+                bindparam("tables", expanding=True),
+                bindparam("team_ids", expanding=True),
+            )
+            result = session.execute(query, {
+                "tables": [t.lower() for t in state["relevant_tables"]],
+                "team_ids": list(team_ids),
+            })
             rows = result.fetchall()
+            print(
+                f"[DEBUG] SQL GEN AGENT — master_config returned {len(rows)} row(s) "
+                f"for tables={state['relevant_tables']}, team_ids={team_ids}"
+            )
             for row in rows:
                 schema_str += f"Table: {row.table_name}\nColumns:\n"
-                cols = row.columns_metadata if isinstance(row.columns_metadata, list) else json.loads(row.columns_metadata)
+                cols = _normalize_columns_metadata(row.columns_metadata)
                 for col in cols:
                     schema_str += f"  - {col['name']} ({col['type']}): {col.get('description', '')}\n"
                 schema_str += "\n"
@@ -96,7 +164,12 @@ def sql_gen_agent(state: PipelineState) -> dict:
         return {"generated_sql": "", "sql_tables_used": []}
 
     if not schema_str:
-        return {"generated_sql": "", "sql_tables_used": []}
+        print(
+            f"[DEBUG] SQL GEN AGENT — No schema found in master_config for "
+            f"tables={state['relevant_tables']}. Check that Pinecone table_name "
+            f"metadata matches master_config exactly."
+        )
+        return {"generated_sql": "NO_SCHEMA_AVAILABLE", "sql_tables_used": []}
 
     llm = get_llm(temperature=0, json_mode=True)
     parser = JsonOutputParser(pydantic_object=SQLGenOutput)
@@ -127,18 +200,30 @@ def sql_gen_agent(state: PipelineState) -> dict:
         
         sql = result.get("sql", "")
         tables = result.get("tables_used", [])
-        
+
+        if isinstance(sql, str) and sql.strip() == "NO_SCHEMA_AVAILABLE":
+            return {
+                "generated_sql": "NO_SCHEMA_AVAILABLE",
+                "sql_tables_used": [],
+            }
+
         # Double check tables are valid within our relevant scope
         valid_tables = [t.lower() for t in state["relevant_tables"]]
         tables = [t for t in tables if t.lower() in valid_tables]
         print("[DEBUG] SQL GEN AGENT")
+
+        # Cache the successfully generated SQL for future identical queries
+        if sql:
+            set_cached_sql(user_query, sql)
+            _cache_logger.debug("Cache SET for query: %s...", user_query[:50])
+
         return {
             "generated_sql": sql,
             "sql_tables_used": tables
         }
     except Exception as e:
         print(f"Error in SQL generation output parsing: {e}")
-        return {"generated_sql": "", "sql_tables_used": []}
+        return {"generated_sql": "NO_SCHEMA_AVAILABLE", "sql_tables_used": []}
 
 
 # ---------------------------------------------------------------------------
@@ -201,20 +286,19 @@ def sql_retry_agent(state: PipelineState) -> dict:
         with get_sync_session() as session:
             query = text(
                 "SELECT table_name, columns_metadata FROM master_config "
-                "WHERE table_name IN :tables AND team_id IN :team_ids"
+                "WHERE LOWER(table_name) IN :tables AND team_id IN :team_ids"
+            ).bindparams(
+                bindparam("tables", expanding=True),
+                bindparam("team_ids", expanding=True),
             )
             result = session.execute(query, {
-                "tables": tuple(state["relevant_tables"]),
-                "team_ids": tuple(team_ids),
+                "tables": [t.lower() for t in state["relevant_tables"]],
+                "team_ids": list(team_ids),
             })
             rows = result.fetchall()
             for row in rows:
                 schema_str += f"Table: {row.table_name}\nColumns:\n"
-                cols = (
-                    row.columns_metadata
-                    if isinstance(row.columns_metadata, list)
-                    else json.loads(row.columns_metadata)
-                )
+                cols = _normalize_columns_metadata(row.columns_metadata)
                 for col in cols:
                     schema_str += f"  - {col['name']} ({col['type']}): {col.get('description', '')}\n"
                 schema_str += "\n"

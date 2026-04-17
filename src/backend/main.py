@@ -88,7 +88,11 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",   # Next.js dev server
+        "http://localhost:3001",   # alt Next.js port
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -111,8 +115,18 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 # ---------------------------------------------------------------------------
 @app.get("/health", tags=["System"])
 def health():
-    """Health check endpoint for load balancers and monitoring."""
-    return {"status": "ok", "service": "scout-api", "version": "1.0.0"}
+    """Health check endpoint for load balancers and monitoring.
+
+    Returns the service status plus real-time cache observability metrics.
+    The 'status: ok' field is required by the Render keep-alive ping — do not remove it.
+    """
+    from backend.cache.query_cache import get_cache_stats
+    return {
+        "status": "ok",
+        "service": "scout-api",
+        "version": "1.0.0",
+        "cache": get_cache_stats(),
+    }
 
 
 @app.get("/health/llm", tags=["System"])

@@ -99,9 +99,9 @@ def build_pipeline():
     graph.add_edge("general", END)
     graph.add_edge("schema", END)
 
-    # After relevancy, run SQL gen and RAG in parallel
-    graph.add_edge("relevancy", "sql_gen")
+    # Sequential pipeline: relevancy -> rag -> sql_gen -> execution
     graph.add_edge("relevancy", "rag")
+    graph.add_edge("rag", "sql_gen")
 
     # SQL gen flows into execution
     graph.add_edge("sql_gen", "execution")
@@ -114,9 +114,6 @@ def build_pipeline():
 
     # Retry flows back into execution for a second attempt
     graph.add_edge("sql_retry", "execution")
-
-    # RAG feeds into synthesis directly
-    graph.add_edge("rag", "synthesis")
 
     graph.add_edge("synthesis", "persona")
     graph.add_edge("persona", END)

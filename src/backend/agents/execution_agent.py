@@ -20,11 +20,13 @@ It ensures NO ONE accidentally tells the database to "DELETE everything" (it blo
 If the query passes the security check, this guard takes it, runs into the actual database vault, 
 grabs the rows of data requested, and brings them back for the team to read.
 """
+import logging
 from sqlalchemy import text
 from backend.db.session import get_sync_session
 from backend.agents.state import PipelineState
 
 FORBIDDEN_KEYWORDS = ["DROP", "DELETE", "UPDATE", "INSERT", "CREATE", "ALTER", "TRUNCATE", "GRANT", "REVOKE"]
+logger = logging.getLogger(__name__)
 
 def validate_sql(sql: str) -> tuple[bool, str]:
     sql_upper = sql.upper()
@@ -49,29 +51,45 @@ def verify_table_authorization(sql_tables: list[str], authorized_tables: list[st
 def execution_agent(state: PipelineState) -> dict:
     sql = state.get("generated_sql", "")
     if not sql:
-        return {"sql_results": []}
+        return {"sql_results": [], "execution_error": ""}
+
+    if sql == "NO_SCHEMA_AVAILABLE":
+        return {
+            "sql_results": [],
+            "sql_error": "NO_SCHEMA_AVAILABLE",
+            "execution_error": "NO_SCHEMA_AVAILABLE",
+        }
     
     is_valid, error = validate_sql(sql)
     if not is_valid:
-        return {"sql_results": [], "generated_sql": f"BLOCKED: {error}"}
+        return {
+            "sql_results": [],
+            "generated_sql": f"BLOCKED: {error}",
+            "execution_error": error,
+        }
     
     # Use the explicitly stored tables from the sql_gen_agent
     used_tables = state.get("sql_tables_used", [])
     if not verify_table_authorization(used_tables, state["relevant_tables"]):
-        return {"sql_results": [], "generated_sql": "BLOCKED: Unauthorized table reference"}
+        return {
+            "sql_results": [],
+            "generated_sql": "BLOCKED: Unauthorized table reference",
+            "execution_error": "Unauthorized table reference",
+        }
     print("[DEBUG] EXECUTION AGENT query: ", sql)
     try:
         with get_sync_session() as session:
             result = session.execute(text(sql))
             rows = [dict(row._mapping) for row in result.fetchmany(1000)]
             print("Success")
-            return {"sql_results": rows, "sql_error": ""}
+            return {"sql_results": rows, "sql_error": "", "execution_error": ""}
     except Exception as e:
         error_msg = str(e)
-        print("Error")
+        logger.error(f"Database Execution Failed: {str(e)}")
         return {
             "sql_results": [],
             "generated_sql": f"EXECUTION_ERROR: {error_msg}",
-            "sql_error": error_msg
+            "sql_error": error_msg,
+            "execution_error": error_msg,
         }
 
