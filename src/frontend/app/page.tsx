@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { redirect } from 'next/navigation'
+import LandingPage from './(landing)/page'
 
 export default function Home() {
-  redirect('/login')
+  return <LandingPage />
 }
