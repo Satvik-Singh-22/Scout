@@ -33,16 +33,20 @@ from backend.agents.synthesis_agent import synthesis_agent
 from backend.agents.persona_agent import persona_agent
 from backend.agents.general_agent import general_agent
 from backend.agents.schema_agent import schema_agent
+from backend.agents.guard_agent import guard_agent
 
 
 def route_after_orchestrator(state: PipelineState) -> str:
     """
     Branches immediately after the orchestrator based on query_intent:
-      - GENERAL      → general agent (LLM answers directly, no data access)
+      - BLOCKED       → guard agent (funny refusal, zero DB access, no pipeline)
+      - GENERAL       → general agent (LLM answers directly, no data access)
       - SCHEMA_LOOKUP → schema agent (describe tables/columns, no SQL execution)
       - everything else → relevancy (SQL_ONLY, RAG_ONLY, HYBRID full pipeline)
     """
     intent = state.get("query_intent", "HYBRID")
+    if intent == "BLOCKED":
+        return "guard"
     if intent == "GENERAL":
         return "general"
     if intent == "SCHEMA_LOOKUP":
@@ -81,6 +85,7 @@ def build_pipeline():
     # Short-circuit nodes (bypass the full data pipeline)
     graph.add_node("general", general_agent)
     graph.add_node("schema", schema_agent)
+    graph.add_node("guard", guard_agent)   # Security gate: blocks destructive queries
 
     graph.set_entry_point("orchestrator")
 
@@ -89,6 +94,7 @@ def build_pipeline():
         "orchestrator",
         route_after_orchestrator,
         {
+            "guard": "guard",
             "general": "general",
             "schema": "schema",
             "relevancy": "relevancy",
@@ -96,6 +102,7 @@ def build_pipeline():
     )
 
     # Short-circuit nodes go straight to END — no synthesis/persona needed
+    graph.add_edge("guard", END)    # Blocked: funny refusal, pipeline never starts
     graph.add_edge("general", END)
     graph.add_edge("schema", END)
 
