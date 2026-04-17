@@ -38,6 +38,7 @@ class PipelineState(TypedDict):
     sql_results: list         # List of row dicts from execution agent
     sql_retry_count: int       # Number of SQL retry attempts (max 1)
     sql_error: str             # Error message from failed SQL execution (passed to retry)
+    execution_error: str       # Raw database execution error for downstream explanation/logging
     rag_chunks: list          # List of text chunk strings from rag agent
     synthesized_context: str  # Combined narrative from synthesis agent
     final_answer: str         # Final user-facing answer from persona agent

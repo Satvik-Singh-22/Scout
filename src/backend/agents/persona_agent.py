@@ -105,7 +105,7 @@ def build_chain_of_thought(state: PipelineState) -> dict:
         "sql_executed": sql if not sql.startswith("BLOCKED") else "",
         "sql_results": sql_results[:50],   # cap at 50 rows — enough for charts, not too heavy
         "rag_chunks_used": len(state.get("rag_chunks", [])),
-        "agent_path": ["orchestrator", "relevancy", "sql_gen", "rag", "execution", "synthesis", "persona"],
+        "agent_path": ["orchestrator", "relevancy", "rag", "sql_gen", "execution", "synthesis", "persona"],
         "query_intent": query_intent,
         "confidence": "high" if sql_results or state.get("rag_chunks") else "low",
         "tables_searched": state.get("relevant_tables", []),
@@ -116,6 +116,25 @@ def build_chain_of_thought(state: PipelineState) -> dict:
 
 
 def persona_agent(state: PipelineState) -> dict:
+    print("[DEBUG] PERSONA AGENT")
+
+    synthesized = state.get("synthesized_context", "")
+    no_data_phrases = (
+        "No relevant database tables were found",
+        "No relevant data found",
+        "SQL execution failed",
+    )
+    if any(phrase in synthesized for phrase in no_data_phrases):
+        cot = build_chain_of_thought(state)
+        cot["confidence"] = "low"
+        return {
+            "final_answer": (
+                "I wasn't able to retrieve data for your query. "
+                f"Details: {synthesized}"
+            ),
+            "chain_of_thought": cot,
+        }
+
     persona = state.get("user_persona", "EXECUTIVE").upper()
 
     llm = get_llm(temperature=0.7)
@@ -136,5 +155,4 @@ def persona_agent(state: PipelineState) -> dict:
         })
 
     cot = build_chain_of_thought(state)
-    print("[DEBUG] PERSONA AGENT")
     return {"final_answer": result.content, "chain_of_thought": cot}

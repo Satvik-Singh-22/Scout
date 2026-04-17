@@ -1,0 +1,4748 @@
+[
+  {
+    "table_name": "alembic_version",
+    "row_count": 1,
+    "primary_keys": [
+      "version_num"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "version_num",
+        "position": 1,
+        "type": "character varying",
+        "max_length": 32,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "alert_configurations",
+    "row_count": 2,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      }
+    ],
+    "check_constraints": [
+      "((condition)::text = ANY ((ARRAY['ABOVE'::character varying, 'BELOW'::character varying, 'SPIKE'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "team_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "metric_name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "table_name",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "threshold",
+        "position": 5,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "condition",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 7,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "alerts",
+    "row_count": 1111,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      },
+      {
+        "column": "alert_config_id",
+        "references": "alert_configurations(id)"
+      }
+    ],
+    "check_constraints": [
+      "((severity)::text = ANY ((ARRAY['HIGH'::character varying, 'MEDIUM'::character varying, 'LOW'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "team_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "alert_config_id",
+        "position": 3,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "title",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "description",
+        "position": 5,
+        "type": "text",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "severity",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "data_snapshot",
+        "position": 7,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_read",
+        "position": 8,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 9,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "chatrooms",
+    "row_count": 50,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "user_id",
+        "references": "users(id)"
+      }
+    ],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 4,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "dashboard_cards",
+    "row_count": 30,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "user_id",
+        "references": "users(id)"
+      }
+    ],
+    "check_constraints": [
+      "((chart_type)::text = ANY ((ARRAY['BAR'::character varying, 'LINE'::character varying, 'PIE'::character varying, 'TABLE'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "title",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "query_result",
+        "position": 4,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "chart_type",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "database_connections",
+    "row_count": 26,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      }
+    ],
+    "check_constraints": [
+      "((db_type)::text = ANY ((ARRAY['POSTGRES'::character varying, 'MYSQL'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "team_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "connection_string_enc",
+        "position": 4,
+        "type": "text",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "db_type",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "master_config",
+    "row_count": 454,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "db_connection_id",
+        "references": "database_connections(id)"
+      },
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      }
+    ],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "db_connection_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "team_id",
+        "position": 3,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "table_name",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "semantic_definition",
+        "position": 5,
+        "type": "text",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "columns_metadata",
+        "position": 6,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 7,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 8,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "messages",
+    "row_count": 303,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "chatroom_id",
+        "references": "chatrooms(id)"
+      }
+    ],
+    "check_constraints": [
+      "((role)::text = ANY ((ARRAY['USER'::character varying, 'ASSISTANT'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "chatroom_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "role",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "content",
+        "position": 4,
+        "type": "text",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "chain_of_thought",
+        "position": 5,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "mock_api_gateway_logs",
+    "row_count": 100000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "timestamp",
+        "position": 2,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "endpoint",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "method",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 10,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status_code",
+        "position": 5,
+        "type": "integer",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "response_time_ms",
+        "position": 6,
+        "type": "integer",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_message",
+        "position": 7,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 8,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "service_name",
+        "position": 9,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "request_id",
+        "position": 10,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_api_gateway_logs' table serves as a centralized logging repository for API gateway transactions, capturing key metadata such as request timestamps, endpoint details, and response outcomes. Its primary business purpose is to store and track API invocation history, facilitating monitoring, debugging, and analytics of API performance and usage patterns. This enables organizations to optimize their API services, troubleshoot issues, and inform data-driven decisions.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_atm_locations",
+    "row_count": 1000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "branch_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "location_name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_operational",
+        "position": 5,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "last_maintenance",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_atm_locations' table serves as a repository for storing and managing the geographical locations of Automated Teller Machines (ATMs) across various regions, along with their operational status and maintenance history. This table enables the tracking and monitoring of ATM locations, facilitating efficient maintenance scheduling and strategic planning for ATM deployment and management. By storing branch identifiers, it also supports integration with broader banking infrastructure and organizational structures.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "New Team",
+      "db_connection": "Demo Connection - New Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_audit_trail",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "action",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "resource_type",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "resource_id",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "ip_address",
+        "position": 7,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_audit_trail' table serves as a centralized logging mechanism to track and record all significant events and actions performed by users within the system. Its primary purpose is to provide a chronological record of user activities, including the type of action, affected resources, and associated metadata, facilitating auditing, security monitoring, and compliance tracking. This table enables the reconstruction of user behavior and system interactions, supporting forensic analysis, troubleshooting, and regulatory requirements.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_batch_payments",
+    "row_count": 5000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "batch_id",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "total_amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "transaction_count",
+        "position": 4,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "scheduled_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "executed_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_batch_payments' table appears to store information related to batch payment processing, tracking the status and execution of multiple transactions grouped by a batch identifier. This table likely serves as a record-keeping mechanism for payment batches, enabling auditing, monitoring, and reconciliation of payment processing activities. Its primary purpose is to provide a centralized repository for batch payment metadata, facilitating efficient management and analysis of payment operations.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "xyz",
+      "db_connection": "Demo Connection - xyz",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_branch_performance",
+    "row_count": 2400,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "branch_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "month",
+        "position": 3,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "transaction_count",
+        "position": 4,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "total_amount",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "customer_count",
+        "position": 6,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "satisfaction_score",
+        "position": 7,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_branch_performance' table appears to store key performance indicators (KPIs) for individual branches of an organization, likely a financial institution, on a monthly basis. It captures transactional data, such as transaction count and total amount, as well as customer-related metrics, including customer count and satisfaction score, to facilitate branch-level performance analysis and evaluation. This data enables business stakeholders to assess branch productivity, customer engagement, and overall performance over time.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_branches",
+    "row_count": 200,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "branch_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "address",
+        "position": 4,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "opened_at",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 6,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "num_staff",
+        "position": 7,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_branches' table appears to store information about physical branches of an organization, likely a bank or financial institution, with attributes such as location, operational status, and staffing levels. This table enables the organization to manage and track its branch network, including branch details, opening dates, and personnel allocation. The data stored in this table can support various business operations, including branch management, resource allocation, and strategic planning.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_chargebacks",
+    "row_count": 10000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "transaction_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "chargeback_amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "dispute_reason",
+        "position": 4,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "outcome",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_chargebacks' table appears to store information related to chargeback transactions, which occur when a customer disputes a payment with their bank, resulting in the reversal of the transaction. This table likely serves as a repository for tracking and managing chargeback events, including the associated transaction, dispute reason, and outcome. By storing this data, the table enables analysis and reporting on chargeback trends, allowing for the identification of potential issues and optimization of payment processing workflows.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Access Team",
+      "db_connection": "Demo Connection - Access Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_compliance_flags",
+    "row_count": 5000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "flag_type",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "severity",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "flagged_at",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "resolved",
+        "position": 6,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_compliance_flags' table appears to store records of compliance issues or alerts raised against customers, with each record representing a specific flag or warning. The table tracks the type and severity of the flag, the timestamp when it was raised, and whether the issue has been resolved, enabling auditing and monitoring of compliance-related events. This table likely supports regulatory compliance, risk management, or quality control processes within an organization.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_cost_centres",
+    "row_count": 100,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "centre_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "department",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "budget",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "actual_spend",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "variance",
+        "position": 6,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "period_start",
+        "position": 7,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "period_end",
+        "position": 8,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_cost_centres' table appears to serve as a financial management tool, storing data related to cost centres within an organization. Its primary purpose is to track and analyze budgetary performance, capturing key metrics such as allocated budget, actual expenditure, and variance, for specific departments over defined time periods. This enables organizations to monitor financial performance, identify areas of overspend, and inform future budgeting decisions.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_accounts",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "account_number",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "account_type",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "balance",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "opened_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_accounts' table serves as a repository for storing customer account information, capturing key details such as account ownership, type, and current balance. Its primary purpose is to maintain a centralized record of customer accounts, facilitating account management, transaction tracking, and financial analysis. This table likely supports core banking or financial services operations, enabling the organization to manage customer relationships and account activities effectively.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team E \u2014 Finance",
+      "db_connection": "Team E \u2014 Finance DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_churn_events",
+    "row_count": 5000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "churn_date",
+        "position": 3,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "reason",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "predicted_at",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "model_confidence",
+        "position": 6,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_churn_events' table appears to store historical and predictive data related to customer churn events, tracking when a customer is predicted to or has stopped using a service. The table captures key information such as the customer ID, date of churn, reason for churn, and the confidence level of the prediction model used to forecast the churn event. This data can be used to analyze customer behavior, identify trends, and inform strategies to prevent future churn.",
+      "columns_metadata": [],
+      "is_active": false,
+      "team": "Team B \u2014 Operations",
+      "db_connection": "Team B \u2014 Operations DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_complaints",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "complaint_text",
+        "position": 3,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "category",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_complaints' table serves as a repository for storing and managing customer complaints, allowing organizations to track and monitor issues reported by their customers. This table enables the collection and categorization of complaints, facilitating analysis and resolution of customer concerns. By storing complaint data, businesses can identify trends, improve customer satisfaction, and enhance their overall service quality.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team A \u2014 Payments",
+      "db_connection": "Team A \u2014 Payments DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_feedback",
+    "row_count": 10000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "rating",
+        "position": 3,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "feedback_text",
+        "position": 4,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "category",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_feedback' table serves as a repository for storing customer feedback and ratings, enabling the organization to track and analyze customer satisfaction across various categories. This data can be utilized to identify areas of improvement, inform product development, and enhance overall customer experience. By capturing feedback and ratings, the table facilitates data-driven decision-making and supports the development of targeted strategies to improve customer engagement and loyalty.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "New Team",
+      "db_connection": "Demo Connection - New Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_lifetime_value",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "ltv_amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "calculated_at",
+        "position": 4,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "segment",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_lifetime_value' table appears to store calculated customer lifetime values (LTV), which represent the predicted total value a customer is expected to bring to a business over their lifetime. This table likely serves as a data repository for customer segmentation and analysis, enabling businesses to categorize customers based on their LTV and assigned segment. By tracking LTV calculations over time, this table facilitates data-driven decision-making for targeted marketing, customer retention, and revenue growth strategies.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_onboarding",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "step_name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "completed_at",
+        "position": 4,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "time_taken_seconds",
+        "position": 5,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_onboarding' table appears to track the progress of customers through an onboarding process, capturing key milestones and metrics such as the completion of specific steps and the time taken to complete them. This table likely serves to monitor and analyze the customer onboarding experience, enabling the identification of bottlenecks, optimization opportunities, and overall process efficiency. By storing this data, the organization can refine its onboarding process to improve customer satisfaction and reduce time-to-value.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_segments",
+    "row_count": 3,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "segment_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "avg_balance",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "avg_transactions_per_month",
+        "position": 4,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "churn_rate",
+        "position": 5,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_segments' table serves as a repository for customer segmentation data, storing key metrics that describe distinct groups of customers based on their financial behavior and loyalty. The table enables analysis and insight into customer demographics, allowing businesses to tailor marketing strategies, optimize services, and predict churn rates for each segment. By leveraging this data, organizations can make informed decisions to enhance customer engagement, retention, and overall revenue growth.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customer_support_tickets",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "issue_description",
+        "position": 3,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "priority",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "resolved_at",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "agent_id",
+        "position": 6,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_customer_support_tickets' table serves as a central repository for tracking and managing customer support requests, storing key information about each ticket, including the customer, issue, priority, and resolution status. This table enables the organization to monitor and analyze support interactions, assign agents to resolve issues, and measure resolution efficiency. By capturing these details, the table supports effective customer support operations and informed decision-making.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_customers",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "full_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "email",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "phone",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "customer_segment",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 8,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": "true",
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "Customer records",
+      "columns_metadata": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "description": "PK"
+        }
+      ],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "List Test",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_deployment_events",
+    "row_count": 1000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "service_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "version",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "deployed_at",
+        "position": 4,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "deployed_by",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "rollback_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_deployment_events' table appears to store historical records of deployment events for various services, capturing key details such as the service name, version, deployment timestamp, and user responsible for the deployment. This table likely serves as an audit trail, enabling tracking and monitoring of deployment activities, including successful deployments and potential rollbacks. By storing this information, the table supports post-deployment analysis, troubleshooting, and compliance reporting.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team A \u2014 Payments",
+      "db_connection": "Team A \u2014 Payments DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_error_logs",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "service_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 3,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_level",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "message",
+        "position": 5,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "stack_trace",
+        "position": 6,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_error_logs' table serves as a centralized repository for storing and tracking error occurrences across various services, allowing for the collection and analysis of error data to facilitate debugging, troubleshooting, and overall system reliability improvement. This table captures key error details, including the service affected, error severity, and diagnostic information, enabling developers to identify and resolve issues efficiently. By logging errors in a structured format, the table supports proactive maintenance and enhances the overall quality of the system.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team A \u2014 Payments",
+      "db_connection": "Team A \u2014 Payments DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_failed_transactions",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "transaction_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_code",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "failure_reason",
+        "position": 6,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_failed_transactions' table serves as a repository for storing and tracking transactions that have failed due to various reasons, capturing key details such as the transaction identifier, amount, region, and error code. This table enables the analysis and auditing of failed transactions, facilitating the identification of trends, patterns, and root causes of failures. By retaining a record of failed transactions, the table supports troubleshooting, error correction, and process improvement initiatives.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_fraud_cases",
+    "row_count": 8000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "transaction_id",
+        "position": 3,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "case_type",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "detected_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount_at_risk",
+        "position": 7,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_fraud_cases' table appears to store information related to suspected fraudulent transactions, with the primary purpose of tracking and managing cases of potential fraud detected within a financial system. This table likely serves as a central repository for fraud case data, enabling analysis, investigation, and resolution of suspicious activities. By storing key details such as case type, status, and amount at risk, the table facilitates effective fraud management and mitigation strategies.",
+      "columns_metadata": [],
+      "is_active": false,
+      "team": "Team B \u2014 Operations",
+      "db_connection": "Team B \u2014 Operations DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_fx_conversions",
+    "row_count": 15000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "from_currency",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 3,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "to_currency",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 3,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "converted_amount",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "rate",
+        "position": 6,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_fx_conversions' table serves as a repository for storing foreign exchange (FX) conversion transactions, capturing the conversion of a specific amount from one currency to another at a given exchange rate. This table enables the tracking and auditing of FX conversions, including the original amount, converted amount, and applicable exchange rate. Its primary purpose is to provide a historical record of FX conversions for financial reporting, analysis, and compliance purposes.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_kyc_records",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "kyc_status",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "verified_at",
+        "position": 4,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "document_type",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_kyc_records' table appears to store Know Your Customer (KYC) verification records for customers, tracking the status of their verification process, including the type of document used for verification and the timestamp of when the verification was completed. This table likely supports anti-money laundering (AML) and regulatory compliance efforts by maintaining a record of customer identity verification. The data in this table can be used to monitor and audit the KYC process, ensuring that customers have been properly vetted and verified.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_loan_applications",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "purpose",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "applied_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "decision_at",
+        "position": 7,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "rate",
+        "position": 8,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_loan_applications' table stores information related to loan applications submitted by customers, capturing key details such as the loan amount, purpose, and status. This table facilitates the management and tracking of loan applications throughout their lifecycle, from initial submission to decision-making. The data stored in this table can be used to support loan processing, risk assessment, and customer relationship management.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_login_events",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 3,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "ip_address",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "success",
+        "position": 5,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "failure_reason",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "device_type",
+        "position": 7,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_login_events' table serves as an audit log to track and record user login attempts, capturing essential details such as the user's identity, timestamp, IP address, and device type. This table enables the monitoring of login success and failure rates, facilitating the identification of potential security threats, and informing improvements to the login process. By storing detailed login event data, this table supports security analytics, user behavior analysis, and compliance reporting.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Access Team",
+      "db_connection": "Demo Connection - Access Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_merchant_categories",
+    "row_count": 100,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "category_code",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 10,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "category_name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "avg_transaction_value",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "transaction_count",
+        "position": 5,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_merchant_categories' table appears to store aggregated transaction data for various merchant categories, capturing key metrics such as average transaction value and total transaction count. This table likely serves as a data warehouse or business intelligence repository, enabling analysis and insights into merchant category performance. Its primary business purpose is to support data-driven decision-making, such as identifying high-value categories or optimizing pricing strategies.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team B \u2014 Operations",
+      "db_connection": "Team B \u2014 Operations DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_notification_delivery_logs",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "notification_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "channel",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "recipient",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "delivered_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_message",
+        "position": 7,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_notification_delivery_logs' table serves as a repository for tracking the delivery status of notifications sent through various channels, providing a historical record of all notification attempts. This table enables the monitoring and analysis of notification delivery success rates, error rates, and timing, facilitating the optimization of notification systems and troubleshooting of delivery issues. By storing detailed logs of each delivery attempt, it supports auditing, debugging, and performance improvement initiatives.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "xyz",
+      "db_connection": "Demo Connection - xyz",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_payment_events",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "transaction_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "event_type",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 4,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "metadata",
+        "position": 5,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_payment_events' table appears to store a log of events related to payment transactions, capturing key information such as the transaction identifier, event type, and timestamp. The inclusion of a metadata column in JSONB format suggests that the table is designed to accommodate variable or dynamic event data, allowing for flexible and extensible storage of additional event details. This table likely serves as an audit trail or event repository for payment processing systems, enabling tracking, monitoring, and analysis of payment transactions.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "xyz",
+      "db_connection": "Demo Connection - xyz",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_payment_methods",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "method_type",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "last_four",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 4,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_default",
+        "position": 5,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_payment_methods' table stores information about the various payment methods associated with each customer, including the type of payment method, the last four digits of the payment instrument, and a flag indicating whether it is the customer's default payment method. This table enables the management of multiple payment options per customer, facilitating flexible and convenient payment processing. By tracking payment methods, the system can efficiently handle transactions, subscriptions, and other financial operations.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "xyz",
+      "db_connection": "Demo Connection - xyz",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_postcode_regions",
+    "row_count": 500,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "postcode_prefix",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 10,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "county",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "country",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": "'England'::character varying",
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_postcode_regions' table serves as a reference dataset to map postcode prefixes to their corresponding geographic regions, counties, and countries. This table enables spatial analysis, data aggregation, and filtering by geographic location, facilitating applications such as geospatial mapping, logistics, and demographic research. By linking postcodes to administrative boundaries, it provides a crucial data linkage for various business intelligence and location-based services.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Access Team",
+      "db_connection": "Demo Connection - Access Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_products",
+    "row_count": 500,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "category",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "monthly_fee",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "interest_rate",
+        "position": 5,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "min_balance",
+        "position": 6,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 7,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_products' table appears to store information about financial products, such as bank accounts or credit cards, with attributes like monthly fees, interest rates, and minimum balance requirements. The table's structure suggests it is used to manage and track the characteristics of these products, enabling features like product catalog management and eligibility checks. This data likely supports business operations, such as customer account management and product offerings, within a financial institution or similar organization.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team E \u2014 Finance",
+      "db_connection": "Team E \u2014 Finance DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_recurring_payments",
+    "row_count": 10000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "frequency",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "next_run_at",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_recurring_payments' table stores information about recurring payment schedules for customers, including the payment amount, frequency, and next scheduled payment date. This table enables the management of automated payments, allowing for efficient tracking and processing of recurring transactions. Its primary purpose is to support subscription-based services or regular billing cycles, ensuring timely and consistent payment processing for customers.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_refunds",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "transaction_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "refund_amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "reason",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_refunds' table is designed to store and manage refund-related data, tracking the refund amount, reason, and status for each transaction. This table enables the recording and monitoring of refund requests, allowing for efficient processing and auditing of financial transactions. By storing refund details, the table supports financial reconciliation, customer service, and compliance with financial regulations.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Access Team",
+      "db_connection": "Demo Connection - Access Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_regions",
+    "row_count": 5,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "region_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region_code",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 10,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "population",
+        "position": 4,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "gdp_billion",
+        "position": 5,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "num_branches",
+        "position": 6,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_regions' table appears to store geographic and economic data for various regions, capturing key metrics such as population, GDP, and number of branches. This table likely serves as a central repository for regional data, enabling business intelligence, analytics, and decision-making at a regional level. Its purpose is to provide a comprehensive overview of regional characteristics, facilitating strategic planning, resource allocation, and performance evaluation.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team A \u2014 Payments",
+      "db_connection": "Team A \u2014 Payments DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_regulatory_reports",
+    "row_count": 500,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "report_type",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "period_start",
+        "position": 3,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "period_end",
+        "position": 4,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "submitted_at",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "notes",
+        "position": 7,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_regulatory_reports' table appears to store historical records of regulatory reports submitted by an organization, capturing key metadata such as report type, submission period, and status. This table likely serves as a central repository for tracking and auditing regulatory compliance, enabling organizations to monitor and manage their reporting obligations. By storing submission timestamps and notes, the table also facilitates post-submission tracking and analysis of report outcomes.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Test Team A \u2014 Payments",
+      "db_connection": "Demo Connection - Test Team A \u2014 Payments",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_revenue_monthly",
+    "row_count": 300,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "month",
+        "position": 2,
+        "type": "date",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "revenue",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "net_profit",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "cost",
+        "position": 6,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "transaction_count",
+        "position": 7,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_revenue_monthly' table serves as a repository for monthly financial performance metrics, capturing key business indicators such as revenue, net profit, and cost, segmented by geographic region. This table enables analysis and tracking of financial trends over time, facilitating informed decision-making and strategic planning. By storing transaction counts alongside financial data, it also supports insights into sales volume and customer activity.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_service_latency_logs",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "service_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 3,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "p50_ms",
+        "position": 4,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "p95_ms",
+        "position": 5,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "p99_ms",
+        "position": 6,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "request_count",
+        "position": 7,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_service_latency_logs' table serves as a repository for storing historical latency metrics of various services, capturing key performance indicators such as 50th, 95th, and 99th percentiles of response times. This data enables monitoring, analysis, and optimization of service performance over time, facilitating identification of trends, bottlenecks, and areas for improvement. By tracking request counts alongside latency metrics, the table also supports capacity planning and resource allocation decisions.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team B \u2014 Operations",
+      "db_connection": "Team B \u2014 Operations DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_session_events",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "session_id",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "user_id",
+        "position": 3,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "event_type",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 5,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "duration_seconds",
+        "position": 6,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_session_events' table appears to store records of user interactions within a session, capturing specific events that occur during the session, such as login, logout, or other notable actions. The table's columns suggest it is designed to track the duration and timestamp of these events, allowing for analysis of user behavior and session patterns. This data can be used to inform product development, optimize user experience, and improve overall system performance.",
+      "columns_metadata": [],
+      "is_active": false,
+      "team": "Team B \u2014 Operations",
+      "db_connection": "Team B \u2014 Operations DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_system_health_metrics",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "service_name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 3,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "cpu_usage_pct",
+        "position": 4,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "memory_usage_pct",
+        "position": 5,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "disk_usage_pct",
+        "position": 6,
+        "type": "double precision",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_system_health_metrics' table is designed to store historical system health metrics for various services, capturing key performance indicators such as CPU, memory, and disk usage. The primary purpose of this table is to provide a centralized repository for monitoring and analyzing system resource utilization over time, enabling proactive maintenance, optimization, and troubleshooting of services. This data can be leveraged to identify trends, detect anomalies, and inform capacity planning decisions.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team A \u2014 Payments",
+      "db_connection": "Team A \u2014 Payments DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_transaction_fees",
+    "row_count": 30000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "transaction_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "fee_amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "fee_type",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "waived",
+        "position": 5,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_transaction_fees' table stores information about fees associated with transactions, allowing for the tracking and management of various fee types and their corresponding amounts. The table also enables the identification of waived fees, providing a clear audit trail for financial transactions. This facilitates accurate accounting, reporting, and compliance with regulatory requirements.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "New Team",
+      "db_connection": "Demo Connection - New Team",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_transaction_limits",
+    "row_count": 20000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "daily_limit",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "monthly_limit",
+        "position": 4,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "current_daily_used",
+        "position": 5,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "current_monthly_used",
+        "position": 6,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_transaction_limits' table stores customer-specific transaction limits and usage tracking data, enabling the enforcement of daily and monthly spending caps. This table facilitates the management of customer transactions, ensuring that their expenditures do not exceed predetermined thresholds. By maintaining a record of current usage, the table supports real-time monitoring and enforcement of transaction limits.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team C \u2014 Risk",
+      "db_connection": "Team C \u2014 Risk DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_transactions",
+    "row_count": 250000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "customer_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "amount",
+        "position": 3,
+        "type": "numeric",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "currency",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 3,
+        "nullable": true,
+        "default": "'GBP'::character varying",
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "region",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "merchant_category",
+        "position": 7,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 8,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "payment_method",
+        "position": 9,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_code",
+        "position": 10,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_transactions' table appears to store records of financial transactions, capturing key details such as customer information, payment amount, currency, and status. This table likely serves as a central repository for transactional data, enabling analysis, reporting, and monitoring of payment activities across various regions, merchant categories, and payment methods. Its primary business purpose is to support transaction management, fraud detection, and customer behavior analysis.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "Team D \u2014 Customer",
+      "db_connection": "Team D \u2014 Customer DB",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "mock_tyk_gateway_events",
+    "row_count": 50000,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "event_type",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "api_id",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "api_name",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "org_id",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "timestamp",
+        "position": 6,
+        "type": "timestamp without time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "latency_ms",
+        "position": 7,
+        "type": "integer",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "error_code",
+        "position": 8,
+        "type": "character varying",
+        "max_length": 50,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": {
+      "semantic_definition": "The 'mock_tyk_gateway_events' table appears to store event data related to API interactions, specifically tracking API requests, responses, and potential errors. Its primary purpose is to log and monitor API performance, latency, and error rates, enabling analysis and optimization of API gateway operations. This table likely supports auditing, debugging, and performance tuning use cases for Tyk Gateway, a popular API management platform.",
+      "columns_metadata": [],
+      "is_active": true,
+      "team": "password",
+      "db_connection": "Demo Connection - password",
+      "db_type": "POSTGRES"
+    }
+  },
+  {
+    "table_name": "scheduled_queries",
+    "row_count": 15,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "user_id",
+        "references": "users(id)"
+      }
+    ],
+    "check_constraints": [
+      "((delivery)::text = ANY ((ARRAY['EMAIL'::character varying, 'DASHBOARD'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "query_text",
+        "position": 3,
+        "type": "text",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "cron_expression",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 100,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "delivery",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "delivery_email",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "is_active",
+        "position": 7,
+        "type": "boolean",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "last_run_at",
+        "position": 8,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "next_run_at",
+        "position": 9,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 10,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "alert_condition",
+        "position": 11,
+        "type": "text",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "alert_severity",
+        "position": 12,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": true,
+        "default": "'MEDIUM'::character varying",
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "scheduled_reports",
+    "row_count": 56,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "scheduled_query_id",
+        "references": "scheduled_queries(id)"
+      }
+    ],
+    "check_constraints": [
+      "((status)::text = ANY ((ARRAY['SUCCESS'::character varying, 'FAILED'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "scheduled_query_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "result_data",
+        "position": 3,
+        "type": "jsonb",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "status",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "executed_at",
+        "position": 5,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "teams",
+    "row_count": 230,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "name",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 3,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "user_team_access",
+    "row_count": 24,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "granted_by",
+        "references": "users(id)"
+      },
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      },
+      {
+        "column": "user_id",
+        "references": "users(id)"
+      }
+    ],
+    "check_constraints": [],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "user_id",
+        "position": 2,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "team_id",
+        "position": 3,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "granted_by",
+        "position": 4,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "granted_at",
+        "position": 5,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  },
+  {
+    "table_name": "users",
+    "row_count": 18,
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "column": "team_id",
+        "references": "teams(id)"
+      }
+    ],
+    "check_constraints": [
+      "((persona)::text = ANY ((ARRAY['EXECUTIVE'::character varying, 'TECHNICAL'::character varying])::text[]))",
+      "((role)::text = ANY ((ARRAY['DATA_OWNER'::character varying, 'ANALYST'::character varying, 'PLATFORM_ADMIN'::character varying, 'ENTERPRISE_ANALYST'::character varying])::text[]))"
+    ],
+    "columns": [
+      {
+        "name": "id",
+        "position": 1,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": true
+      },
+      {
+        "name": "email",
+        "position": 2,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "name",
+        "position": 3,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "password_hash",
+        "position": 4,
+        "type": "character varying",
+        "max_length": 255,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "persona",
+        "position": 5,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "role",
+        "position": 6,
+        "type": "character varying",
+        "max_length": 20,
+        "nullable": false,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "team_id",
+        "position": 7,
+        "type": "uuid",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      },
+      {
+        "name": "created_at",
+        "position": 8,
+        "type": "timestamp with time zone",
+        "max_length": null,
+        "nullable": true,
+        "default": null,
+        "comment": null,
+        "is_primary_key": false
+      }
+    ],
+    "scout_semantic": null
+  }
+]
