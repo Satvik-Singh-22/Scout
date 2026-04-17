@@ -30,7 +30,7 @@ class PipelineState(TypedDict):
     team_id: str              # User's home team UUID (organisational affiliation)
     allowed_team_ids: List[str]  # List of team UUIDs this user's pipeline can access
     current_date: str         # ISO date string e.g. "2025-01-15"
-    query_intent: str         # "SQL_ONLY" | "RAG_ONLY" | "HYBRID" | "GENERAL" | "SCHEMA_LOOKUP"
+    query_intent: str         # "BLOCKED" | "SQL_ONLY" | "RAG_ONLY" | "HYBRID" | "GENERAL" | "SCHEMA_LOOKUP"
     routing_decision: dict    # {"use_sql": bool, "use_rag": bool, "reasoning": str}
     relevant_tables: list     # List of table name strings selected by relevancy agent
     generated_sql: str        # The SQL string from sql_gen agent
