@@ -15,11 +15,9 @@
  */
 
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export function MSWProvider({ children }: { children: React.ReactNode }) {
-  const [mswReady, setMswReady] = useState(false)
-
   useEffect(() => {
     async function initMSW() {
       // Only enable MSW when explicitly opted in via env variable.
@@ -28,18 +26,15 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
         const { worker } = await import('../mocks/browser')
         await worker.start({ onUnhandledRequest: 'bypass' })
         console.info('[MSW] Mock Service Worker enabled')
-        setMswReady(true)
-      } else {
-        setMswReady(true)
       }
     }
     initMSW()
   }, [])
 
-  if (!mswReady) {
-    // Prevent rendering while MSW is registering to avoid hydration mismatches
-    return null
-  }
-
+  // Always render children immediately.
+  // MSW initialises asynchronously in the background — it must never
+  // block the render tree, because on the server useEffect never runs
+  // and the old `return null` guard caused the entire page to prerender
+  // as an empty tree, crashing Next.js's client-module manifest build.
   return <>{children}</>
 }

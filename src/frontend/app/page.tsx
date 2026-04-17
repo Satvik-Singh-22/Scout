@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import LandingPage from './(landing)/page'
-
-export default function Home() {
-  return <LandingPage />
-}
+// Route "/" is served directly by app/(landing)/page.tsx via the route group.
+// This file re-exports it cleanly to avoid an extra RSC boundary wrapping
+// a 'use client' component, which would confuse Next.js's module graph.
+export { default } from './(landing)/page'
