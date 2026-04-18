@@ -134,6 +134,7 @@ class CreateChatroomRequest(BaseModel):
     """Request body for creating a new chatroom."""
 
     name: str = Field(..., min_length=1, max_length=255)
+    agent_mode: str = Field("DATABASE", pattern="^(DATABASE|SLACK_JIRA)$")
 
 
 class ChatroomResponse(BaseModel):
@@ -141,6 +142,7 @@ class ChatroomResponse(BaseModel):
 
     id: str
     name: str | None
+    agent_mode: str = "DATABASE"
     created_at: str
     last_message_preview: str | None = None
 
@@ -224,6 +226,7 @@ async def list_chatrooms(
         ChatroomResponse(
             id=str(cr.id),
             name=cr.name,
+            agent_mode=cr.agent_mode,
             created_at=cr.created_at.isoformat(),
             last_message_preview=preview_map.get(cr.id),
         )
@@ -241,7 +244,11 @@ async def create_chatroom(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Create a new isolated chatroom for the authenticated user."""
-    chatroom = Chatroom(user_id=current_user.id, name=body.name)
+    chatroom = Chatroom(
+        user_id=current_user.id,
+        name=body.name,
+        agent_mode=body.agent_mode,
+    )
     db.add(chatroom)
     await db.commit()
     await db.refresh(chatroom)
@@ -249,6 +256,7 @@ async def create_chatroom(
     return ChatroomResponse(
         id=str(chatroom.id),
         name=chatroom.name,
+        agent_mode=chatroom.agent_mode,
         created_at=chatroom.created_at.isoformat(),
     )
 
@@ -487,6 +495,7 @@ async def send_message(
                 "previous_answer": previous_answer,
                 "previous_sql": previous_sql,
                 "previous_tables_used": previous_tables_used,
+                "agent_mode": chatroom.agent_mode,
             }
 
 

@@ -42,6 +42,7 @@ from backend.db.session import SyncSessionLocal
 from backend.agents.anomaly_reasoner_agent import anomaly_reasoner_agent
 from backend.agents.anomaly_checker_agent import anomaly_checker_agent
 from backend.services.notification_service import send_report_email, send_alert_email
+from backend.services.sync_workflow_data import sync_workflow_data
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +77,16 @@ def start_scheduler():
             replace_existing=True,
             jitter=45,
         )
+        scheduler.add_job(
+            sync_workflow_data,
+            "interval",
+            days=1,
+            id="sync_workflow_data_runner",
+            next_run_time=None,  # Paused by default; user must manually resume
+            replace_existing=True,
+        )
         scheduler.start()
-        logger.info("Background scheduler started with 2 jobs")
+        logger.info("Background scheduler started with 3 jobs (1 paused)")
     except Exception as exc:
         logger.warning("Scheduler startup failed (non-fatal): %s", exc)
 

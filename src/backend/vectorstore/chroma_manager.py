@@ -24,6 +24,9 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 _vectorstore = None
+_slack_vectorstore = None
+_jira_vectorstore = None
+
 def get_vectorstore() -> Chroma:
     global _vectorstore
     if _vectorstore is None:
@@ -41,8 +44,46 @@ def get_vectorstore() -> Chroma:
     return _vectorstore
 
 
+def get_slack_vectorstore() -> Chroma:
+    global _slack_vectorstore
+    if _slack_vectorstore is None:
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        _slack_vectorstore = Chroma(
+            collection_name="slack_messages",
+            embedding_function=embeddings,
+            persist_directory=os.getenv("CHROMA_PERSIST_PATH", "./chroma_data")
+        )
+    return _slack_vectorstore
+
+
+def get_jira_vectorstore() -> Chroma:
+    global _jira_vectorstore
+    if _jira_vectorstore is None:
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        _jira_vectorstore = Chroma(
+            collection_name="jira_tickets",
+            embedding_function=embeddings,
+            persist_directory=os.getenv("CHROMA_PERSIST_PATH", "./chroma_data")
+        )
+    return _jira_vectorstore
+
+
 def get_retriever():
     return get_vectorstore().as_retriever(
         search_type="mmr",
         search_kwargs={"k": 5}
+    )
+
+
+def get_slack_retriever(k=15):
+    return get_slack_vectorstore().as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": k}
+    )
+
+
+def get_jira_retriever(k=15):
+    return get_jira_vectorstore().as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": k}
     )

@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getMe, getChatrooms, renameChatroom, User, Chatroom as ChatroomType } from '@/lib/api-client';
 import Chatroom from '@/components/Chatroom';
+import { getAgentModeConfig } from '@/lib/agent-modes';
 import { ArrowLeft, Edit2, Search } from 'lucide-react';
 
 export default function ChatroomPage({
@@ -132,9 +133,9 @@ export default function ChatroomPage({
                 </button>
               </div>
             )}
-            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest flex items-center gap-1">
+              <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest flex items-center gap-1">
               <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>
-              Live Pipeline Active
+              {chatroom ? getAgentModeConfig(chatroom.agent_mode).headerSubtitle : 'Live Pipeline Active'}
             </span>
           </div>
         </div>
@@ -151,6 +152,16 @@ export default function ChatroomPage({
           <div className="h-8 w-px bg-gray-100 mx-1"></div>
 
           <div className="flex items-center gap-3">
+            {/* Mode badge */}
+            {chatroom && (() => {
+              const mc = getAgentModeConfig(chatroom.agent_mode);
+              return (
+                <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${mc.badgeBg} ${mc.badgeText}`}>
+                  <span className="text-sm">{mc.icon}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{mc.shortLabel}</span>
+                </div>
+              );
+            })()}
              <div className={`flex flex-col items-end`}>
                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Perspective</span>
                <div
@@ -170,6 +181,7 @@ export default function ChatroomPage({
       <Chatroom
         chatroomId={params.chatroom_id}
         userPersona={persona}
+        agentMode={chatroom?.agent_mode || 'DATABASE'}
         onPersonaChange={(p) => setPersona(p)}
         initialQuery={initialQuery}
       />
