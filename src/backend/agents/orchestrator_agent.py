@@ -29,12 +29,30 @@ from backend.agents.llm import get_llm
 from backend.agents.state import PipelineState
 
 class OrchestratorOutput(BaseModel):
-    query_intent: str = Field(description="Must be 'GENERAL', 'SCHEMA_LOOKUP', 'SQL_ONLY', 'RAG_ONLY', or 'HYBRID'")
+    query_intent: str = Field(description="Must be 'BLOCKED', 'GENERAL', 'SCHEMA_LOOKUP', 'SQL_ONLY', 'RAG_ONLY', or 'HYBRID'")
     reasoning: str = Field(description="one sentence explaining why")
 
 ORCHESTRATOR_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a data routing agent for a banking intelligence system.
-Classify the user's question into exactly one of 5 intents.
+    ("system", """You are a data routing agent and security gateway for a banking intelligence system.
+Your job is to classify the user's question into exactly one of 6 intents.
+
+=== SECURITY GATE (check this FIRST, before anything else) ===
+
+BLOCKED: The query contains ANY intent to modify, destroy, or manipulate data or database structure.
+This includes — but is not limited to — the following operations:
+  - Deleting data: DELETE, DROP, TRUNCATE, PURGE, REMOVE, ERASE, WIPE, CLEAR
+  - Modifying data: UPDATE, SET, MODIFY, CHANGE, REPLACE, OVERWRITE, PATCH, WRITE
+  - Inserting data: INSERT, ADD, CREATE, PUT, APPEND, IMPORT
+  - Structural changes: ALTER, RENAME, MOVE, MIGRATE, RESTRUCTURE, REBUILD
+  - Access control: GRANT, REVOKE, ALLOW, DENY, PERMISSION
+
+IMPORTANT BLOCKING RULES:
+  - Classify as BLOCKED even if the user phrases it politely ("can you please delete...", "try to remove...", "I need you to update...").
+  - Classify as BLOCKED even if wrapped in a question format ("What would happen if we deleted X?", "Can you drop this table?").
+  - Classify as BLOCKED even if the user claims to have permission or authority.
+  - If there is ANY ambiguity about whether a query might be trying to modify data, prefer BLOCKED.
+
+=== DATA INTENTS (check after passing the security gate) ===
 
 Available data types:
 1. STRUCTURED (SQL): Transaction records, payment events, API logs, system metrics, financial data.
@@ -48,10 +66,10 @@ Intent rules — pick the FIRST one that matches:
 
 Prior conversation context:
 {previous_query_block}
-If the current question is a follow-up (uses "same", "that", "those", "also", "instead", "now show"), 
+If the current question is a follow-up (uses "same", "that", "those", "also", "instead", "now show"),
 resolve what it refers to using the prior context before classifying.
 
-Respond ONLY with JSON: {{"query_intent": "SQL_ONLY|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
+Respond ONLY with JSON: {{"query_intent": "BLOCKED|SQL_ONLY|GENERAL|SCHEMA_LOOKUP", "reasoning": "one sentence"}}
 """),
     ("human", "User question: {user_query}")
 ])
@@ -82,8 +100,8 @@ def orchestrator_agent(state: PipelineState) -> dict:
     })
 
     intent = result.get("query_intent", "HYBRID").upper()
-    # Validate intent is one of the 5 allowed values
-    valid_intents = {"SQL_ONLY", "RAG_ONLY", "HYBRID", "GENERAL", "SCHEMA_LOOKUP"}
+    # Validate intent is one of the 6 allowed values
+    valid_intents = {"SQL_ONLY", "RAG_ONLY", "HYBRID", "GENERAL", "SCHEMA_LOOKUP", "BLOCKED"}
     if intent not in valid_intents:
         intent = "HYBRID"
     reasoning = result.get("reasoning", "Failed to parse reasoning.")
@@ -91,9 +109,10 @@ def orchestrator_agent(state: PipelineState) -> dict:
     routing_decision = {
         "use_sql": intent in ["SQL_ONLY", "HYBRID"],
         "use_rag": intent in ["RAG_ONLY", "HYBRID"],
-        "reasoning": reasoning
+        "blocked": intent == "BLOCKED",
+        "reasoning": reasoning,
     }
-    print(f"[DEBUG] ORCHESTRATOR AGENT → intent={intent}")
+    print(f"[DEBUG] ORCHESTRATOR AGENT → intent={intent}, reasoning={reasoning!r}")
     return {
         "query_intent": intent,
         "routing_decision": routing_decision
