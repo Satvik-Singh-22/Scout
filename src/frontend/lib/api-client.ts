@@ -82,6 +82,7 @@ export interface Message {
 export interface Chatroom {
   id: string;
   name: string;
+  agent_mode: 'DATABASE' | 'SLACK_JIRA';
   created_at: string;
   last_message_preview?: string;
 }
@@ -248,11 +249,11 @@ export async function getChatrooms(): Promise<Chatroom[]> {
   return Array.isArray(data) ? data : [];
 }
 
-export async function createChatroom(name: string): Promise<Chatroom> {
+export async function createChatroom(name: string, agent_mode: 'DATABASE' | 'SLACK_JIRA' = 'DATABASE'): Promise<Chatroom> {
   const res = await apiFetch(`${BASE_URL}/chatrooms`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, agent_mode }),
   });
   if (!res.ok) throw new Error('Failed to create chatroom');
   return res.json();

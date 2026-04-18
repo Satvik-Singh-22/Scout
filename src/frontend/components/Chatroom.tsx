@@ -22,17 +22,13 @@ import MessageBubble from './MessageBubble';
 import { Send, Bot, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getAgentModeConfig } from '@/lib/agent-modes';
+import type { AgentMode } from '@/lib/agent-modes';
 
-const SUGGESTED_QUERIES = [
-  "Which API endpoints have an average response_time_ms higher than average?",
-  "Is there a correlation between latency_ms in the Tyk gateway and specific api_name values?",
-  "Which services have reported cpu_usage_pct exceeding 80% in the last hour?",
-  "Show the share of transactions by region",
-  "Which customers have unusually high refund-to-transaction ratios?"
-];
 interface Props {
   chatroomId: string;
   userPersona: 'EXECUTIVE' | 'TECHNICAL';
+  agentMode?: AgentMode;
   onPersonaChange?: (persona: 'EXECUTIVE' | 'TECHNICAL') => void;
   initialQuery?: string;
 }
@@ -74,9 +70,11 @@ function MgrIcon() {
 export default function Chatroom({
   chatroomId,
   userPersona,
+  agentMode = 'DATABASE',
   onPersonaChange,
   initialQuery,
 }: Props) {
+  const modeConfig = getAgentModeConfig(agentMode);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -88,8 +86,8 @@ export default function Chatroom({
   const [randomSuggestions, setRandomSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    setRandomSuggestions([...SUGGESTED_QUERIES].sort(() => 0.5 - Math.random()).slice(0, 3));
-  }, []);
+    setRandomSuggestions([...modeConfig.suggestedQueries].sort(() => 0.5 - Math.random()).slice(0, 3));
+  }, [agentMode]);
   useEffect(() => {
     setIsLoadingMessages(true);
     getMessages(chatroomId)
@@ -198,9 +196,9 @@ export default function Chatroom({
               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4 p-3">
                 <img src="/scout_icon.svg" alt="Scout" className="w-full h-full object-contain" />
               </div>
-              <p className="text-xl font-bold text-gray-900">Scout Intelligence Portal</p>
+              <p className="text-xl font-bold text-gray-900">{modeConfig.emptyStateTitle}</p>
               <p className="text-sm mt-1 text-gray-500">
-                Ask anything about your processed data and customer insights.
+                {modeConfig.emptyStateDescription}
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {randomSuggestions.map(suggestion => (
@@ -300,7 +298,7 @@ export default function Chatroom({
                   handleSend();
                 }
               }}
-              placeholder="Ask a question about your data..."
+              placeholder={modeConfig.placeholder}
               disabled={isStreaming}
               className="w-full px-4 py-3 bg-transparent text-sm focus:outline-none resize-none min-h-[52px] leading-relaxed disabled:opacity-50"
             />

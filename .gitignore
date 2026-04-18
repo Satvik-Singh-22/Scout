@@ -82,3 +82,5 @@ pytestdebug.log
 .mypy_cache/
 .pyre/
 .typecheck/
+
+add_queries.py
