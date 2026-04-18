@@ -37,58 +37,89 @@ const DAYS_OF_WEEK = [
   { label: 'Sun', value: 0 },
 ]
 
+function getUtcSchedule(frequency: Frequency, localTime: string, localDow: number) {
+  const [hours, minutes] = localTime.split(':').map(Number);
+  const targetDate = new Date();
+  
+  if (frequency === 'weekly') {
+    const currentDow = targetDate.getDay();
+    const daysToAdd = (localDow - currentDow + 7) % 7;
+    targetDate.setDate(targetDate.getDate() + daysToAdd);
+  }
+  
+  targetDate.setHours(hours, minutes, 0, 0);
+  
+  return {
+    utcMinutes: targetDate.getUTCMinutes(),
+    utcHours: targetDate.getUTCHours(),
+    utcDow: targetDate.getUTCDay(),
+  };
+}
+
 function buildCronExpression(frequency: Frequency, time: string, dayOfWeek: number): string {
-  const [hours, minutes] = time.split(':').map(Number)
+  const { utcMinutes, utcHours, utcDow } = getUtcSchedule(frequency, time, dayOfWeek);
+  
   switch (frequency) {
     case 'hourly':
-      return `${minutes} * * * *`
+      return `${utcMinutes} * * * *`;
     case 'every6h':
-      return `${minutes} */6 * * *`
+      return `${utcMinutes} */6 * * *`;
     case 'daily':
-      return `${minutes} ${hours} * * *`
+      return `${utcMinutes} ${utcHours} * * *`;
     case 'weekly':
-      return `${minutes} ${hours} * * ${dayOfWeek}`
+      return `${utcMinutes} ${utcHours} * * ${utcDow}`;
     default:
-      return `${minutes} ${hours} * * *`
+      return `${utcMinutes} ${utcHours} * * *`;
   }
 }
 
-/** Parse an existing cron expression into frequency/time/dayOfWeek */
+/** Parse an existing UTC cron expression into local frequency/time/dayOfWeek */
 function parseCronExpression(cron: string): { frequency: Frequency; time: string; dayOfWeek: number } {
-  const parts = cron.trim().split(/\s+/)
-  if (parts.length < 5) return { frequency: 'daily', time: '08:00', dayOfWeek: 1 }
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length < 5) return { frequency: 'daily', time: '08:00', dayOfWeek: 1 };
 
-  const [minute, hour, , , dow] = parts
+  const [minute, hour, , , dow] = parts;
+
+  // Convert UTC hour/min/dow back to local equivalents
+  const d = new Date();
+  d.setUTCHours(hour === '*' ? 0 : Number(hour), minute === '*' ? 0 : Number(minute), 0, 0);
+  
+  if (dow !== '*' && hour !== '*') {
+    const currentUtcDow = d.getUTCDay();
+    const diff = (Number(dow) - currentUtcDow + 7) % 7;
+    d.setUTCDate(d.getUTCDate() + diff);
+  }
+
+  const localM = d.getMinutes().toString().padStart(2, '0');
+  const localH = d.getHours().toString().padStart(2, '0');
+  const localTime = `${localH}:${localM}`;
+  const localDow = d.getDay(); // 0-6
 
   // Hourly: "N * * * *"
   if (hour === '*' && minute !== '*') {
-    return { frequency: 'hourly', time: `00:${minute.padStart(2, '0')}`, dayOfWeek: 1 }
+    return { frequency: 'hourly', time: `00:${localM}`, dayOfWeek: 1 };
   }
 
   // Every 6 hours: "N */6 * * *"
   if (hour.startsWith('*/')) {
-    return { frequency: 'every6h', time: `00:${minute.padStart(2, '0')}`, dayOfWeek: 1 }
+    return { frequency: 'every6h', time: `00:${localM}`, dayOfWeek: 1 };
   }
 
   // Weekly: "N H * * D"
   if (dow !== '*' && hour !== '*') {
     return {
       frequency: 'weekly',
-      time: `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`,
-      dayOfWeek: parseInt(dow) || 1
-    }
+      time: localTime,
+      dayOfWeek: localDow
+    };
   }
 
   // Daily: "N H * * *"
   if (hour !== '*') {
-    return {
-      frequency: 'daily',
-      time: `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`,
-      dayOfWeek: 1
-    }
+    return { frequency: 'daily', time: localTime, dayOfWeek: 1 };
   }
 
-  return { frequency: 'daily', time: '08:00', dayOfWeek: 1 }
+  return { frequency: 'daily', time: '08:00', dayOfWeek: 1 };
 }
 
 export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: Props) {
@@ -256,7 +287,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {(frequency === 'daily' || frequency === 'weekly') && (
             <div>
               <label htmlFor="sq-time" className="block text-xs font-medium text-gray-500 mb-1">
-                At what time? (UTC)
+                At what time? (Local Time)
               </label>
               <input
                 id="sq-time"
@@ -272,7 +303,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {(frequency === 'hourly' || frequency === 'every6h') && (
             <div>
               <label htmlFor="sq-minute" className="block text-xs font-medium text-gray-500 mb-1">
-                At what minute past the hour? (UTC)
+                At what minute past the hour? (Local Time)
               </label>
               <input
                 id="sq-minute"
@@ -289,7 +320,7 @@ export default function ScheduledQueryForm({ onCreated, onCancel, editQuery }: P
           {/* Schedule summary */}
           <div className="mt-3 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg">
             <span className="material-symbols-outlined text-sm">schedule</span>
-            <span className="font-medium">{getScheduleSummary()} (UTC)</span>
+            <span className="font-medium">{getScheduleSummary()} (Local Time)</span>
           </div>
         </div>
 
