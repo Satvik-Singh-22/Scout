@@ -35,20 +35,36 @@ function describeCron(cron: string): string {
 
   const [minute, hour, , , dow] = parts
 
-  const formatTime = (h: string, m: string): string => {
-    const hh = parseInt(h)
-    const mm = parseInt(m)
-    if (isNaN(hh)) return ''
-    const ampm = hh >= 12 ? 'PM' : 'AM'
-    const displayH = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh
-    return `${displayH}:${mm.toString().padStart(2, '0')} ${ampm}`
+  const d = new Date()
+  d.setUTCHours(hour === '*' ? 0 : Number(hour), minute === '*' ? 0 : Number(minute), 0, 0)
+  
+  if (dow !== '*' && hour !== '*') {
+    const currentUtcDow = d.getUTCDay()
+    const diff = (Number(dow) - currentUtcDow + 7) % 7
+    d.setUTCDate(d.getUTCDate() + diff)
+  }
+
+  const localM = d.getMinutes().toString().padStart(2, '0')
+  const localH = d.getHours()
+  const localDowNum = d.getDay().toString()
+
+  const formatTime = (h: number, mStr: string): string => {
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h
+    return `${displayH}:${mStr} ${ampm}`
   }
 
   if (minute === '*' && hour === '*') return 'Every minute'
-  if (hour === '*' && minute !== '*') return `Hourly at :${minute.padStart(2, '0')}`
+
+  // Hourly: "N * * * *"
+  if (hour === '*' && minute !== '*') {
+    return `Hourly at :${localM}`
+  }
+
+  // Every 6 hours: "N */6 * * *"
   if (hour.startsWith('*/')) {
     const interval = hour.replace('*/', '')
-    return `Every ${interval} hours at :${minute.padStart(2, '0')}`
+    return `Every ${interval} hours at :${localM}`
   }
 
   const dayNames: Record<string, string> = {
@@ -56,12 +72,16 @@ function describeCron(cron: string): string {
     '4': 'Thu', '5': 'Fri', '6': 'Sat', '7': 'Sun'
   }
 
+  // Weekly: "N H * * D"
   if (dow !== '*' && hour !== '*') {
-    return `Weekly on ${dayNames[dow] || dow} at ${formatTime(hour, minute)}`
+    return `Weekly on ${dayNames[localDowNum] || localDowNum} at ${formatTime(localH, localM)}`
   }
-  if (dow === '*' && hour !== '*') {
-    return `Daily at ${formatTime(hour, minute)}`
+
+  // Daily: "N H * * *"
+  if (hour !== '*') {
+    return `Daily at ${formatTime(localH, localM)}`
   }
+
   return cron
 }
 
@@ -211,7 +231,7 @@ export default function ScheduledPage() {
                     )}
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)} (UTC)</span>
+                    <span className="text-gray-700 text-xs font-medium">{describeCron(q.cron_expression)}</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
