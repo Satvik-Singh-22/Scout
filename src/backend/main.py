@@ -93,6 +93,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "https://scout-eight-rho.vercel.app", 
+        "https://www.teamscout.xyz"
     ],
     allow_credentials=True,
     allow_methods=["*"],
