@@ -89,11 +89,23 @@ export default function Chatroom({
     setRandomSuggestions([...modeConfig.suggestedQueries].sort(() => 0.5 - Math.random()).slice(0, 3));
   }, [agentMode]);
   useEffect(() => {
+    let ignore = false;
     setIsLoadingMessages(true);
     getMessages(chatroomId)
-      .then(setMessages)
+      .then((data) => {
+        if (!ignore) {
+          setMessages((prev) => {
+            const dataIds = new Set(data.map((m) => m.id));
+            const optimistic = prev.filter((m) => !dataIds.has(m.id));
+            return [...data, ...optimistic];
+          });
+        }
+      })
       .catch(() => { })
-      .finally(() => setIsLoadingMessages(false));
+      .finally(() => {
+        if (!ignore) setIsLoadingMessages(false);
+      });
+    return () => { ignore = true; };
   }, [chatroomId]);
 
   useEffect(() => {
@@ -110,11 +122,14 @@ export default function Chatroom({
 
   // Auto-send initialQuery from dashboard Quick Ask
   useEffect(() => {
-    if (initialQuery && !didAutoSend.current) {
+    if (initialQuery && !didAutoSend.current && !isLoadingMessages) {
       didAutoSend.current = true;
-      handleSendQuery(initialQuery);
+      // Only auto-send if the chatroom is actually empty (prevents double-send on refresh)
+      if (messages.length === 0) {
+        handleSendQuery(initialQuery);
+      }
     }
-  }, [initialQuery]);
+  }, [initialQuery, isLoadingMessages, messages.length]);
 
   const handleSendQuery = (query: string) => {
     if (!query.trim() || isStreaming) return;
