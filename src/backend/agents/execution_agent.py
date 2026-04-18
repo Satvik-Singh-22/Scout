@@ -24,17 +24,21 @@ import logging
 from sqlalchemy import text
 from backend.db.session import get_sync_session
 from backend.agents.state import PipelineState
+import re
 
 FORBIDDEN_KEYWORDS = ["DROP", "DELETE", "UPDATE", "INSERT", "CREATE", "ALTER", "TRUNCATE", "GRANT", "REVOKE"]
 logger = logging.getLogger(__name__)
 
 def validate_sql(sql: str) -> tuple[bool, str]:
     sql_upper = sql.upper()
+    # Allow SELECT or WITH
+    if not re.match(r"^\s*(SELECT|WITH)\b", sql_upper):
+        return False, "Query must start with SELECT or WITH"
+    # Detect forbidden keywords safely
     for keyword in FORBIDDEN_KEYWORDS:
-        if keyword in sql_upper.split(): # Split to prevent false positives like 'DROP' in a string value 'DROPLET'
+        if re.search(rf"\b{keyword}\b", sql_upper):
             return False, f"Forbidden keyword detected: {keyword}"
-    if not sql_upper.strip().startswith("SELECT"):
-        return False, "Query must start with SELECT"
+
     return True, ""
 
 def verify_table_authorization(sql_tables: list[str], authorized_tables: list[str]) -> bool:

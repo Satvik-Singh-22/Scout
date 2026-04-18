@@ -20,6 +20,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getChatrooms, createChatroom, renameChatroom, deleteChatroom } from '@/lib/api-client'
 import type { Chatroom } from '@/lib/api-client'
+import { AGENT_MODES, getAgentModeConfig } from '@/lib/agent-modes'
+import type { AgentMode } from '@/lib/agent-modes'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -31,19 +33,13 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-const ACCENT_COLORS = [
-  { bg: 'bg-indigo-50', text: 'text-indigo-600', badge: 'bg-indigo-100 text-indigo-600', icon: '📊' },
-  { bg: 'bg-emerald-50', text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-600', icon: '🔍' },
-  { bg: 'bg-orange-50', text: 'text-orange-600', badge: 'bg-orange-100 text-orange-600', icon: '📈' },
-  { bg: 'bg-purple-50', text: 'text-purple-600', badge: 'bg-purple-100 text-purple-600', icon: '🧠' },
-]
-
 export default function ChatHubPage() {
   const router = useRouter()
   const [chatrooms, setChatrooms] = useState<Chatroom[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
+  const [showNewChatModal, setShowNewChatModal] = useState(false)
 
   // Inline rename state
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -65,11 +61,22 @@ export default function ChatHubPage() {
     }
   }, [editingId])
 
-  const handleNewChat = async () => {
+  // Close modal on Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowNewChatModal(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
+
+  const handleNewChat = async (mode: AgentMode) => {
     setCreating(true)
+    setShowNewChatModal(false)
     setError('')
     try {
-      const room = await createChatroom('New Conversation')
+      const config = getAgentModeConfig(mode)
+      const room = await createChatroom('New Conversation', mode)
       router.push(`/chat/${room.id}`)
     } catch (err: unknown) {
       setCreating(false)
@@ -144,7 +151,7 @@ export default function ChatHubPage() {
           <p className="text-gray-500 text-sm mt-1">Ask natural language questions about your enterprise data.</p>
         </div>
         <button
-          onClick={handleNewChat}
+          onClick={() => setShowNewChatModal(true)}
           disabled={creating}
           className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-60"
         >
@@ -152,6 +159,47 @@ export default function ChatHubPage() {
           {creating ? 'Creating…' : 'New Chat'}
         </button>
       </div>
+
+      {/* Agent Selection Modal */}
+      {showNewChatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowNewChatModal(false)}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">Choose Agent Type</h2>
+              <p className="text-sm text-gray-500 mt-1">Select the intelligence pipeline for this conversation.</p>
+            </div>
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.values(AGENT_MODES).map((mode) => (
+                <button
+                  key={mode.key}
+                  onClick={() => handleNewChat(mode.key)}
+                  className={`group relative flex flex-col items-center text-center p-6 rounded-xl border-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] ${mode.borderColor} hover:border-opacity-100 border-opacity-40 bg-white hover:${mode.bgColor}`}
+                >
+                  <div className={`w-14 h-14 rounded-2xl ${mode.bgColor} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                    {mode.icon}
+                  </div>
+                  <h3 className={`text-base font-bold text-gray-900 mb-1`}>{mode.label}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{mode.description}</p>
+                  <div className={`mt-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${mode.badgeBg} ${mode.badgeText}`}>
+                    {mode.shortLabel}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="px-6 pb-5 flex justify-end">
+              <button
+                onClick={() => setShowNewChatModal(false)}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -185,7 +233,7 @@ export default function ChatHubPage() {
           <h2 className="text-lg font-bold text-gray-700 mb-1">No sessions yet</h2>
           <p className="text-sm text-gray-400 mb-6">Start your first conversation with your data</p>
           <button
-            onClick={handleNewChat}
+            onClick={() => setShowNewChatModal(true)}
             disabled={creating}
             className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all disabled:opacity-50"
           >
@@ -198,8 +246,8 @@ export default function ChatHubPage() {
       {!loading && chatrooms.length > 0 && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {chatrooms.map((room, index) => {
-              const accent = ACCENT_COLORS[index % ACCENT_COLORS.length]
+            {chatrooms.map((room) => {
+              const modeConfig = getAgentModeConfig(room.agent_mode)
               const isEditing = editingId === room.id
               return (
                 <div
@@ -227,8 +275,8 @@ export default function ChatHubPage() {
                   </div>
 
                   <div>
-                    <div className={`w-10 h-10 rounded-lg ${accent.bg} ${accent.text} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-lg`}>
-                      {accent.icon}
+                    <div className={`w-10 h-10 rounded-lg ${modeConfig.bgColor} ${modeConfig.accentColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-lg`}>
+                      {modeConfig.icon}
                     </div>
 
                     {/* Inline rename input or title */}
@@ -271,8 +319,8 @@ export default function ChatHubPage() {
                     )}
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${accent.badge}`}>
-                      Analytics
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${modeConfig.badgeBg} ${modeConfig.badgeText}`}>
+                      {modeConfig.shortLabel}
                     </span>
                     <span className="text-xs text-gray-400">{timeAgo(room.created_at)}</span>
                   </div>
@@ -282,7 +330,7 @@ export default function ChatHubPage() {
 
             {/* Start new thread card */}
             <div
-              onClick={handleNewChat}
+              onClick={() => setShowNewChatModal(true)}
               className="group border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center h-48 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all cursor-pointer"
             >
               <div className="w-12 h-12 rounded-full bg-gray-50 group-hover:bg-indigo-100 text-gray-400 group-hover:text-indigo-500 flex items-center justify-center mb-3 transition-colors">

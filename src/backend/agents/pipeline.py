@@ -21,6 +21,9 @@ For example, it steps from the "Orchestrator" (who decides what kind of question
 to "Relevancy" (who finds the right data charts), 
 to "SQL Gen" (who writes the database query), and finally to "Persona" (who frames the final answer perfectly). 
 It decides who does what, and in what order, ensuring smooth teamwork.
+
+When the user toggles to "Slack/Jira" mode in the UI the entry-point router bypasses the
+orchestrator entirely and routes directly to the slack_jira agent node.
 """
 from langgraph.graph import StateGraph, END
 from backend.agents.state import PipelineState
@@ -33,6 +36,26 @@ from backend.agents.synthesis_agent import synthesis_agent
 from backend.agents.persona_agent import persona_agent
 from backend.agents.general_agent import general_agent
 from backend.agents.schema_agent import schema_agent
+from backend.agents.slack_jira import slack_jira_agent
+
+
+# ---------------------------------------------------------------------------
+# Entry-point router — checks the user's mode toggle BEFORE hitting the
+# orchestrator.  This avoids making the orchestrator aware of agent_mode.
+# ---------------------------------------------------------------------------
+def _route_entry(state: PipelineState) -> str:
+    """
+    First routing decision at the pipeline entry point.
+
+    If the frontend sends ``agent_mode == "SLACK_JIRA"`` the request goes
+    straight to the ``slack_jira`` node.  Everything else (including the
+    default empty / "DATABASE" value) proceeds to the orchestrator as
+    before.
+    """
+    mode = state.get("agent_mode", "DATABASE").upper()
+    if mode == "SLACK_JIRA":
+        return "slack_jira"
+    return "orchestrator"
 from backend.agents.guard_agent import guard_agent
 
 
@@ -87,7 +110,23 @@ def build_pipeline():
     graph.add_node("schema", schema_agent)
     graph.add_node("guard", guard_agent)   # Security gate: blocks destructive queries
 
-    graph.set_entry_point("orchestrator")
+    # Slack/Jira agent node (activated by user-mode toggle)
+    graph.add_node("slack_jira", slack_jira_agent)
+
+    # --- Entry point: mode-based routing -----------------------------------
+    graph.set_entry_point("entry_router")
+    graph.add_node("entry_router", lambda state: {})  # pass-through, no state changes
+    graph.add_conditional_edges(
+        "entry_router",
+        _route_entry,
+        {
+            "slack_jira": "slack_jira",
+            "orchestrator": "orchestrator",
+        },
+    )
+
+    # Slack/Jira goes straight to END — it handles everything internally
+    graph.add_edge("slack_jira", END)
 
     # Branch immediately after orchestrator
     graph.add_conditional_edges(

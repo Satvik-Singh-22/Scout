@@ -222,12 +222,19 @@ class MasterConfig(Base):
 # ---------------------------------------------------------------------------
 class Chatroom(Base):
     __tablename__ = "chatrooms"
+    __table_args__ = (
+        CheckConstraint(
+            "agent_mode IN ('DATABASE', 'SLACK_JIRA')",
+            name="ck_chatrooms_agent_mode",
+        ),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     name = Column(String(255), nullable=True)
+    agent_mode = Column(String(20), nullable=False, default="DATABASE")
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
     # Relationships
@@ -240,7 +247,7 @@ class Chatroom(Base):
     )
 
     def __repr__(self):
-        return f"<Chatroom(id={self.id}, name='{self.name}')>"
+        return f"<Chatroom(id={self.id}, name='{self.name}', mode='{self.agent_mode}')>"
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+--- src/backend/vectorstore/chroma_manager.py
++++ src/backend/vectorstore/chroma_manager.py
+@@ -20,6 +20,9 @@
+ """
+ import os
+ from langchain_community.vectorstores import Chroma
+ from langchain_community.embeddings import HuggingFaceEmbeddings
++import chromadb.config
++
++# Disable ChromaDB telemetry wrapper across the module
++os.environ["ANONYMIZED_TELEMETRY"] = "False"
+ 
+ _vectorstore = None
+ _slack_vectorstore = None

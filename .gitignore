@@ -25,7 +25,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -82,3 +82,5 @@ pytestdebug.log
 .mypy_cache/
 .pyre/
 .typecheck/
+
+add_queries.py
