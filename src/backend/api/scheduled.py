@@ -107,6 +107,7 @@ class ScheduledReportResponse(BaseModel):
 def _compute_next_run(cron_expression: str) -> datetime | None:
     """
     Compute the next run time from a cron expression using APScheduler's CronTrigger.
+    Always interprets the cron expression in UTC to match the scheduler.
     Returns None if the expression is invalid.
     """
     try:
@@ -119,6 +120,7 @@ def _compute_next_run(cron_expression: str) -> datetime | None:
                 day=parts[2],
                 month=parts[3],
                 day_of_week=parts[4],
+                timezone="UTC",
             )
         elif len(parts) == 6:
             trigger = CronTrigger(
@@ -128,12 +130,16 @@ def _compute_next_run(cron_expression: str) -> datetime | None:
                 day=parts[3],
                 month=parts[4],
                 day_of_week=parts[5],
+                timezone="UTC",
             )
         else:
             return None
 
         now = datetime.now(timezone.utc)
         next_fire = trigger.get_next_fire_time(None, now)
+        # Guard: ensure result is always timezone-aware UTC
+        if next_fire is not None and next_fire.tzinfo is None:
+            next_fire = next_fire.replace(tzinfo=timezone.utc)
         return next_fire
     except Exception:
         return None
