@@ -80,9 +80,9 @@ def start_scheduler():
         scheduler.add_job(
             sync_workflow_data,
             "interval",
-            days=1,
+            hours=6,
             id="sync_workflow_data_runner",
-            next_run_time=None,  # Paused by default; user must manually resume
+            next_run_time=datetime.now(timezone.utc),  # Start immediately and run every 6h
             replace_existing=True,
         )
         scheduler.start()

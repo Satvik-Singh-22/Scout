@@ -23,6 +23,8 @@ import os
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 _vectorstore = None
 _slack_vectorstore = None
 _jira_vectorstore = None
