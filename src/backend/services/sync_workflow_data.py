@@ -47,7 +47,7 @@ def _sync_slack():
     vectorstore = get_slack_vectorstore()
     
     # We query for messages from yesterday onwards.
-    yesterday_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_str = (datetime.now(timezone.utc) - timedelta(days=50)).strftime('%Y-%m-%d')
     query = f"after:{yesterday_str}"
 
     params = {
