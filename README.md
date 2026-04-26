@@ -32,7 +32,7 @@ limitations under the License.
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
 
-*Built for the **NatWest Group Hackathon** — "Talk to Data: Seamless Self-Service Intelligence"*
+*Talk to Data: Seamless Self-Service Intelligence*
 
 </div>
 
@@ -367,20 +367,6 @@ Scout will:
   <img src="assets/example-2b.jpeg" alt="Example 2B - Governance Boundary Enforced" width="100%"/>
 </p>
 
-
-## Limitations (Honest Assessment)
-
-In the spirit of full transparency:
-
-| Feature | Status |
-|---|---|
-| MYSQL database connections | **Defined in schema** — `db_type` accepts `MYSQL` but the pipeline currently executes against PostgreSQL only |
-| Semantic caching of repeated queries | **Not implemented** — every query invokes the full LangGraph pipeline; response caching would reduce LLM costs in production |
-| Vector store ingestion UI | **Not implemented** — ChromaDB is pre-populated via a script (`vectorstore/ingest.py`); Data Owners cannot upload documents through the UI |
-| Fine-grained column-level access control | **Not implemented** — governance operates at the table level; column-level restrictions are not enforced |
-
----
-
 ## Future Scope
 
 These are genuine next steps we would build with additional time:
@@ -531,12 +517,6 @@ Key endpoints:
 
 ---
 
-## Team
-
-Built with intensity and conviction by **Aayush Gupta & Team** for the **NatWest Group Hackathon**.
-
----
-
 ## License
 
 This project is licensed under the Apache License 2.0.
@@ -547,7 +527,5 @@ See the LICENSE file for details.
 <div align="center">
 
 *Scout — Because your data deserves to be heard.*
-
-**[NatWest Hackathon 2026]**
 
 </div>
